@@ -13,7 +13,7 @@ export const addToOrder = createSlice({
     addData: (state, action) => {
       console.log(action.payload);
       state.addToOrderData.push({
-        type: action.payload.data,
+        item: action.payload.data,
         selectedType: action.payload.selectedType,
         count: 1,
         cartbutton: true,
@@ -23,7 +23,7 @@ export const addToOrder = createSlice({
     increment: (state, action) => {
       const { id } = action.payload;
       const item = state.addToOrderData.find(
-        (item: any) => item.type.id === id
+        (item: any) => item.item.id === id
       );
       if (item) {
         item.count += 1;
