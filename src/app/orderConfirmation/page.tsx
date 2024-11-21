@@ -74,17 +74,18 @@ export default function OrderConfirmation() {
           </div>
           <div className="border-t pt-4">
             <h3 className="font-semibold mb-2">Order Summary</h3>
-            {finalItem.orderedItem.map((item: any, index: number) => (
-              <div
-                key={index}
-                className="flex justify-between items-center py-2"
-              >
-                <span>
-                  {item.count}x {item.name}
-                </span>
-                <span>&#8377;{item.price * item.count}</span>
-              </div>
-            ))}
+            {finalItem &&
+              finalItem.orderedItem.map((item: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center py-2"
+                >
+                  <span>
+                    {item.count}x {item.name}
+                  </span>
+                  <span>&#8377;{item.price * item.count}</span>
+                </div>
+              ))}
             <div className="flex justify-between items-center py-2 font-semibold border-t mt-2">
               <span>Total</span>
               <span>&#8377;{total.toFixed(2)}</span>
