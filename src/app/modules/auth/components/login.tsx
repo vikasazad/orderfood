@@ -15,7 +15,6 @@ import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
 import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 // Custom hook for countdown timer
 const useCountdown = (initialCount: number) => {
   const [count, setCount] = useState(initialCount);
@@ -126,64 +125,63 @@ export default function Login() {
   return (
     <>
       <div id="recaptcha-container" />
-      <Suspense>
-        <div className="grid min-h-screen place-items-center bg-gray-50">
-          <Card className="w-[350px]">
-            <CardHeader>
-              <CardTitle>Welcome to Food Order</CardTitle>
-              <CardDescription>Please authenticate to continue</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stage === "phone" ? (
-                <form onSubmit={handlePhoneSubmit}>
-                  <div className="flex flex-col space-y-4">
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      required
-                    />
-                    <Button type="submit">Send OTP</Button>
+
+      <div className="grid min-h-screen place-items-center bg-gray-50">
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Welcome to Food Order</CardTitle>
+            <CardDescription>Please authenticate to continue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {stage === "phone" ? (
+              <form onSubmit={handlePhoneSubmit}>
+                <div className="flex flex-col space-y-4">
+                  <Input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                  <Button type="submit">Send OTP</Button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleOtpSubmit}>
+                <div className="flex flex-col space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                  />
+                  <div className="text-sm text-gray-500">
+                    {count > 0
+                      ? `Resend OTP in ${count}s`
+                      : "You can resend OTP now"}
                   </div>
-                </form>
-              ) : (
-                <form onSubmit={handleOtpSubmit}>
-                  <div className="flex flex-col space-y-4">
-                    <Input
-                      type="text"
-                      placeholder="Enter OTP"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      required
-                    />
-                    <div className="text-sm text-gray-500">
-                      {count > 0
-                        ? `Resend OTP in ${count}s`
-                        : "You can resend OTP now"}
-                    </div>
-                    <Button type="submit">Verify OTP</Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-            <CardFooter>
-              {stage === "otp" && (
-                <Button
-                  variant="outline"
-                  onClick={handleResendOtp}
-                  disabled={count > 0}
-                >
-                  {isLoading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Resend OTP
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-      </Suspense>
+                  <Button type="submit">Verify OTP</Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
+          <CardFooter>
+            {stage === "otp" && (
+              <Button
+                variant="outline"
+                onClick={handleResendOtp}
+                disabled={count > 0}
+              >
+                {isLoading && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Resend OTP
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
     </>
   );
 }
