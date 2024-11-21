@@ -4,6 +4,9 @@
 // import { NewUser } from "@/types/auth/typesAuth";
 // // import { auth } from "@/auth";
 
+import { db } from "@/config/db/firebase";
+import { doc, setDoc } from "firebase/firestore";
+
 // export async function registerUser(email: string, newUser: NewUser) {
 //   try {
 //     await setDoc(doc(db, email, "info"), {
@@ -217,3 +220,16 @@
 //     return false;
 //   }
 // }
+export async function add(email: string, newUser: any, field: string) {
+  try {
+    await setDoc(doc(db, email, field), {
+      //setdoc is to create if not or if exists then overwrite // to add new sub-collection this function can be used
+      ...newUser,
+    });
+    return "User registered Successfully";
+  } catch (error) {
+    console.log("eror");
+    console.log(error);
+    return false;
+  }
+}

@@ -27,6 +27,7 @@ import {
   setFinalOrder,
 } from "@/lib/features/addToOrderSlice";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 
 export default function OrderCard() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function OrderCard() {
   const [selectedPortion, setSelectedPortion] = useState("");
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [specialRequirements, setSpecialRequirements] = useState("");
-  const [finalPrice, setfinalPrice] = useState("");
+  const [finalPrice, setfinalPrice] = useState(0);
   useEffect(() => {
     const total = ordereditems.reduce((total, item) => {
       const price = item.item.price[item.selectedType];
@@ -104,35 +105,127 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    const orderId = generateOrderId("ABS", "T-1");
-    console.log("New Order ID:", orderId);
-    console.log("first", ordereditems);
-    const orderData: any = {
-      orderSuccess: false,
-      orderedItem: [],
-      orderAmount: finalPrice,
-      contactNo: "",
-      name: "",
-      problemFood: "",
-      problemService: "",
-      timeOfOrder: new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      timeOfService: "",
-      specialrequirements: specialRequirements,
-    };
-    ordereditems.map((er: any) => {
-      return orderData.orderedItem.push(createOrderData(er));
-    });
-    dispatch(setFinalOrder(orderData));
-    console.log(orderData);
+
+    createOrder();
     // router.push("/Detail");
+  };
+
+  const createOrder = async () => {
+    const res = await fetch("/api/createOrder", {
+      method: "POST",
+      body: JSON.stringify({ amount: finalPrice * 100 }),
+    });
+    const data = await res.json();
+
+    const paymentData = {
+      key: process.env.RAZORPAY_API_KEY,
+      order_id: data.id,
+      name: "Checkout",
+      description: "Thank you",
+      image: "",
+      prefill: {
+        name: "somehing",
+        contact: "8851280284",
+      },
+      notes: {
+        address: "Razorpay Corporate Office",
+      },
+      theme: {
+        color: "#121212",
+      },
+      handler: async function (response: any) {
+        // verify payment
+        const res = await fetch("/api/verifyOrder", {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          }),
+        });
+        const data = await res.json();
+        console.log("HERE", data, {
+          orderId: response.razorpay_order_id,
+          razorpayPaymentId: response.razorpay_payment_id,
+          razorpaySignature: response.razorpay_signature,
+        });
+        if (data.isOk) {
+          const orderId = generateOrderId("ABS", "T-1");
+          console.log("New Order ID:", orderId);
+          console.log("first", ordereditems);
+          const orderData: any = {
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            orderId: orderId,
+            orderSuccess: true,
+            orderedItem: [],
+            orderAmount: finalPrice,
+            contactNo: "",
+            name: "",
+            problemFood: "",
+            problemService: "",
+            timeOfOrder: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            timeOfService: "",
+            estimatedDeliveryTime: "",
+            deliveryAddress: "",
+            specialrequirements: specialRequirements,
+          };
+          ordereditems.map((er: any) => {
+            return orderData.orderedItem.push(createOrderData(er));
+          });
+          dispatch(setFinalOrder(orderData));
+          console.log(orderData);
+          router.push("/orderConfirmation");
+        } else {
+          const orderId = generateOrderId("ABS", "T-1");
+          console.log("New Order ID:", orderId);
+          console.log("first", ordereditems);
+          const orderData: any = {
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            orderId: orderId,
+            orderSuccess: false,
+            orderedItem: [],
+            orderAmount: finalPrice,
+            contactNo: "",
+            name: "",
+            problemFood: "",
+            problemService: "",
+            timeOfOrder: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            timeOfService: "",
+            estimatedDeliveryTime: "",
+            deliveryAddress: "",
+            specialrequirements: specialRequirements,
+          };
+          ordereditems.map((er: any) => {
+            return orderData.orderedItem.push(createOrderData(er));
+          });
+          dispatch(setFinalOrder(orderData));
+          console.log(orderData);
+          router.push("/orderConfirmation");
+          alert("Payment failed");
+        }
+      },
+    };
+
+    const payment = new (window as any).Razorpay(paymentData);
+    payment.open();
   };
 
   return (
     <div className="w-full max-w-md mx-auto p-4">
+      <Script
+        type="text/javascript"
+        src="https://checkout.razorpay.com/v1/checkout.js"
+      />
       <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
