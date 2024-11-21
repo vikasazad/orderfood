@@ -32,10 +32,12 @@ export default function OrderConfirmation() {
     ],
   };
 
-  const total = finalItem.orderedItem.reduce(
-    (sum: any, item: any) => sum + item.price * item.count,
-    0
-  );
+  const total = Array.isArray(finalItem?.orderedItem)
+    ? finalItem.orderedItem.reduce(
+        (sum: number, item: any) => sum + item.price * item.count,
+        0
+      )
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
