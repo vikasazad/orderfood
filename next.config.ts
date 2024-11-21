@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
   reactStrictMode: true,
   compress: true,
   images: {
@@ -12,11 +9,6 @@ const nextConfig = {
         hostname: "**",
       },
     ],
-  },
-};
-module.exports = {
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
   },
 };
 
