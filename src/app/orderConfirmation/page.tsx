@@ -74,7 +74,7 @@ export default function OrderConfirmation() {
           </div>
           <div className="border-t pt-4">
             <h3 className="font-semibold mb-2">Order Summary</h3>
-            {finalItem &&
+            {finalItem.orderedItem &&
               finalItem.orderedItem.map((item: any, index: number) => (
                 <div
                   key={index}
