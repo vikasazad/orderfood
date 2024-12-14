@@ -1,18 +1,19 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
+import { motion } from "framer-motion";
+import { CheckCircle2, Clock, Copy, MapPin, Receipt } from "lucide-react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { clearCart } from "@/lib/features/addToOrderSlice";
-import { RootState } from "@/lib/store";
-import { CheckCircle, Clock, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/store";
+import { clearCart } from "@/lib/features/addToOrderSlice";
 
 export default function OrderConfirmation() {
   const dispatch = useDispatch();
@@ -21,97 +22,166 @@ export default function OrderConfirmation() {
     (state: RootState) => state.addToOrderData.finalOrder
   );
   console.log("DATA", finalItem);
-  const orderDetails = {
-    orderNumber: "123456",
-    estimatedDeliveryTime: "30-45 minutes",
-    deliveryAddress: "123 Main St, Anytown, USA",
-    items: [
-      { name: "Margherita Pizza", quantity: 1, price: 12.99 },
-      { name: "Caesar Salad", quantity: 1, price: 8.99 },
-      { name: "Garlic Bread", quantity: 1, price: 4.99 },
-    ],
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`${label} copied to clipboard`);
+    });
   };
 
-  const total = Array.isArray(finalItem?.orderedItem)
-    ? finalItem.orderedItem.reduce(
-        (sum: number, item: any) => sum + item.price * item.count,
-        0
-      )
-    : 0;
-
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-10 w-10 text-green-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-green-600">
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center space-y-2">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="flex justify-center"
+        >
+          <CheckCircle2
+            className="w-16 h-16 text-green-500"
+            strokeWidth={1.5}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="text-2xl font-semibold text-green-600">
             Order Placed Successfully!
-          </CardTitle>
-          <CardDescription>
+          </h2>
+          <p className="text-muted-foreground mt-1">
             Thank you for your order. Your food is being prepared.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="font-semibold">Order Number:</span>
-            <span>{finalItem.orderId}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="font-semibold">Payment Id:</span>
-            <span>{finalItem.razorpayPaymentId}</span>
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="h-5 w-5" />
-            <span>
-              Estimated delivery time: {orderDetails.estimatedDeliveryTime}
-            </span>
-          </div>
-          <div className="flex items-start gap-2 text-muted-foreground">
-            <MapPin className="h-5 w-5 mt-1" />
-            <span>{orderDetails.deliveryAddress}</span>
-          </div>
-          <div className="border-t pt-4">
-            <h3 className="font-semibold mb-2">Order Summary</h3>
-            {finalItem.orderedItem &&
-              finalItem.orderedItem.map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center py-2"
-                >
-                  <span>
-                    {item.count}x {item.name}
-                  </span>
-                  <span>&#8377;{item.price * item.count}</span>
-                </div>
-              ))}
-            <div className="flex justify-between items-center py-2 font-semibold border-t mt-2">
-              <span>Total</span>
-              <span>&#8377;{total.toFixed(2)}</span>
+          </p>
+        </motion.div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Order Number</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono font-medium">{finalItem.orderId}</p>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() =>
+                  copyToClipboard(finalItem.orderId, "Order number")
+                }
+              >
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy order number</span>
+              </Button>
             </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={() => {
-              dispatch(clearCart());
-              router.push("/");
-            }}
-          >
-            View order
-          </Button>
-          <Button
-            onClick={() => {
-              dispatch(clearCart());
-              router.push("/");
-            }}
-          >
-            Return to Menu
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Payment ID</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono font-medium truncate">
+                {finalItem.razorpayPaymentId}
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 flex-shrink-0"
+                onClick={() =>
+                  copyToClipboard(finalItem.razorpayPaymentId, "Payment ID")
+                }
+              >
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy payment ID</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
+            <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="font-medium">Estimated Delivery Time</p>
+              <p className="text-sm text-muted-foreground">25-30 minutes</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
+            <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="font-medium">Table</p>
+              <p className="text-sm text-muted-foreground">
+                {finalItem.tableNo}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Receipt className="w-5 h-5" />
+            <h3 className="font-semibold">Order Summary</h3>
+          </div>
+
+          <div className="space-y-3">
+            {finalItem.orderedItem &&
+              finalItem.orderedItem.map((item: any, index: number) => (
+                <div key={index} className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">
+                      {item.count}x {item.name}
+                    </p>
+                  </div>
+                  <p className="font-medium">₹{item.price * item.count}</p>
+                </div>
+              ))}
+
+            <div className="flex justify-between items-center pt-4 border-t">
+              <span className="text-lg font-semibold">Subtotal</span>
+              <span className="text-lg font-semibold">
+                ₹{finalItem.subtotal}
+              </span>
+            </div>
+            {finalItem.gstAmount && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Tax</span>
+                <span className="text-sm font-medium">
+                  ₹{finalItem.gstAmount}
+                </span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-4 border-t">
+              <span className="text-lg font-semibold">Grand Total</span>
+              <span className="text-lg font-semibold">
+                ₹{finalItem.orderAmount}
+              </span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex gap-3">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            dispatch(clearCart());
+            router.push("/");
+          }}
+        >
+          View Order
+        </Button>
+        <Button
+          className="w-full"
+          onClick={() => {
+            dispatch(clearCart());
+            router.push("/");
+          }}
+        >
+          Return to Menu
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

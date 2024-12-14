@@ -2,7 +2,7 @@
 import React from "react";
 import OrderCard from "../modules/order/components/OrderCard";
 
-const page = () => {
+const Page = () => {
   return (
     <div>
       <OrderCard />
@@ -10,4 +10,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

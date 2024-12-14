@@ -28,13 +28,19 @@ import {
 } from "@/lib/features/addToOrderSlice";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
+import { sendNotification } from "@/lib/sendNotification";
+import { calculateTax, calculateTotal, sendOrder } from "../utils/orderApi";
 
 export default function OrderCard() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const table = useSelector((state: RootState) => state.addToOrderData.user);
+  console.log("TABLE", table);
   const ordereditems = useSelector(
     (state: RootState) => state.addToOrderData.addToOrderData
   );
+  const token = useSelector((state: RootState) => state.addToOrderData.token);
+
   const [selectedPortion, setSelectedPortion] = useState("");
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [specialRequirements, setSpecialRequirements] = useState("");
@@ -44,8 +50,11 @@ export default function OrderCard() {
       const price = item.item.price[item.selectedType];
       return total + price * item.count;
     }, 0);
-    setfinalPrice(total);
-  }, [ordereditems]);
+    const digit = Number(table?.tax.gstPercentage) || 0;
+    console.log(digit);
+    const tax = Math.round((total * digit) / 100);
+    setfinalPrice(total + tax);
+  }, [ordereditems, table]);
 
   const removeAfterZero = (item: any, id: any) => {
     if (ordereditems.length === 1) {
@@ -80,13 +89,7 @@ export default function OrderCard() {
       setSelectedPortion("");
     }
   };
-
-  const calculateTotal = () => {
-    return ordereditems.reduce((total, item) => {
-      const price = item.item.price[item.selectedType];
-      return total + price * item.count;
-    }, 0);
-  };
+  console.log(finalPrice);
   function generateOrderId(restaurantCode: string, tableNo: string) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     const orderId = `${restaurantCode}-T${tableNo}-${randomNumber}`;
@@ -105,7 +108,6 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
-
     createOrder();
     // router.push("/Detail");
   };
@@ -120,12 +122,12 @@ export default function OrderCard() {
     const paymentData = {
       key: process.env.RAZORPAY_API_KEY,
       order_id: data.id,
-      name: "Checkout",
+      name: "Rosier",
       description: "Thank you",
       image: "",
       prefill: {
-        name: "somehing",
-        contact: "8851280284",
+        name: table?.phone,
+        contact: table?.phone,
       },
       notes: {
         address: "Razorpay Corporate Office",
@@ -151,8 +153,6 @@ export default function OrderCard() {
         });
         if (data.isOk) {
           const orderId = generateOrderId("ABS", "T-1");
-          console.log("New Order ID:", orderId);
-          console.log("first", ordereditems);
           const orderData: any = {
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -160,8 +160,14 @@ export default function OrderCard() {
             orderSuccess: true,
             orderedItem: [],
             orderAmount: finalPrice,
-            contactNo: "",
+            subtotal: calculateTotal(ordereditems),
+            gstPercentage: table?.tax.gstPercentage || "",
+            gstAmount: table?.tax.gstPercentage
+              ? calculateTax(ordereditems, table?.tax.gstPercentage)
+              : "",
+            contactNo: table?.phone,
             name: "",
+            email: "",
             problemFood: "",
             problemService: "",
             timeOfOrder: new Date().toLocaleTimeString("en-US", {
@@ -170,6 +176,7 @@ export default function OrderCard() {
               hour12: true,
             }),
             timeOfService: "",
+            tableNo: `T-${table?.tableNo}`,
             estimatedDeliveryTime: "",
             deliveryAddress: "",
             specialrequirements: specialRequirements,
@@ -179,7 +186,13 @@ export default function OrderCard() {
           });
           dispatch(setFinalOrder(orderData));
           console.log(orderData);
+          sendOrder(orderData, token, "Xevair");
           router.push("/orderConfirmation");
+          sendNotification(
+            token,
+            "New Order Received",
+            "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
+          );
         } else {
           const orderId = generateOrderId("ABS", "T-1");
           console.log("New Order ID:", orderId);
@@ -191,8 +204,12 @@ export default function OrderCard() {
             orderSuccess: false,
             orderedItem: [],
             orderAmount: finalPrice,
+            subtotal: calculateTotal(ordereditems),
+            gstPercentage: table?.tax.gstPercentage || "",
+            gstAmount: "",
             contactNo: "",
             name: "",
+            email: "",
             problemFood: "",
             problemService: "",
             timeOfOrder: new Date().toLocaleTimeString("en-US", {
@@ -201,6 +218,7 @@ export default function OrderCard() {
               hour12: true,
             }),
             timeOfService: "",
+            tableNo: "T-8",
             estimatedDeliveryTime: "",
             deliveryAddress: "",
             specialrequirements: specialRequirements,
@@ -352,19 +370,30 @@ export default function OrderCard() {
           <div className="space-y-2 pt-4">
             <div className="flex justify-between">
               <span>MRP Total</span>
-              <span>₹{calculateTotal()}</span>
+              <span>₹{calculateTotal(ordereditems)}</span>
             </div>
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>-₹100</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Taxes</span>
-              <span>₹78</span>
-            </div>
+            {table?.tax?.gstPercentage ? (
+              <div className="flex justify-between">
+                <span>Taxes</span>
+                <span>
+                  ₹{calculateTax(ordereditems, table?.tax?.gstPercentage)}
+                </span>
+              </div>
+            ) : (
+              ""
+            )}
+
             <div className="flex justify-between font-medium pt-2 border-t">
               <span>Total Amount</span>
-              <span>₹{calculateTotal() - 100 + 78}</span>
+              {/* <span>₹{calculateTotal() - 100 + 78}</span> */}
+              <span>
+                {table.tax.gstPercentage
+                  ? `₹${
+                      calculateTotal(ordereditems) +
+                      calculateTax(ordereditems, table?.tax?.gstPercentage)
+                    }`
+                  : `₹${calculateTotal(ordereditems)}`}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -375,7 +404,12 @@ export default function OrderCard() {
           <div className="flex items-center">
             <span className="text-sm text-muted-foreground">TOTAL</span>
             <span className="text-xl font-semibold ml-3">
-              ₹{calculateTotal() - 100 + 78}
+              {table.tax.gstPercentage
+                ? `₹${
+                    calculateTotal(ordereditems) +
+                    calculateTax(ordereditems, table?.tax?.gstPercentage)
+                  }`
+                : `₹${calculateTotal(ordereditems)}`}
             </span>
           </div>
         </div>

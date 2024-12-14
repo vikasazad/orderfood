@@ -4,6 +4,8 @@ const initialState = {
   addToOrderData: [] as any[], // Change this to an array of objects with 'name', 'price', and 'count'
   addedItemIds: [] as any[],
   finalOrder: {} as any,
+  token: "",
+  user: {} as any,
 };
 
 export const addToOrder = createSlice({
@@ -19,6 +21,13 @@ export const addToOrder = createSlice({
         cartbutton: true,
       });
       state.addedItemIds.push(action.payload.data.id);
+    },
+    addToken: (state, action) => {
+      state.token = action.payload;
+    },
+
+    addUser: (state, action) => {
+      state.user = action.payload;
     },
     increment: (state, action) => {
       const { id } = action.payload;
@@ -56,6 +65,8 @@ export const addToOrder = createSlice({
 
 export const {
   addData,
+  addToken,
+  addUser,
   increment,
   decrement,
   clearCart,

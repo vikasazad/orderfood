@@ -2,6 +2,7 @@ import { initializeApp, getApp, getApps } from "firebase/app";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getMessaging, getToken, isSupported } from "firebase/messaging";
 // Your web app's Firebase configuration
 console.log("first", process.env.API_KEY);
 const firebaseConfig = {
@@ -15,8 +16,27 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const messaging = async () => {
+  const supported = await isSupported();
+  return supported ? getMessaging(app) : null;
+};
+export const fetchToken = async () => {
+  try {
+    const fcmMessaging = await messaging();
+    if (fcmMessaging) {
+      const token = await getToken(fcmMessaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_FCM_VAPID_KEY,
+      });
+      return token;
+    }
+    return null;
+  } catch (err) {
+    console.error("An error occurred while fetching the token:", err);
+    return null;
+  }
+};
 const authentication = getAuth(app);
 authentication.useDeviceLanguage();
-export { authentication };
+export { authentication, messaging };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
