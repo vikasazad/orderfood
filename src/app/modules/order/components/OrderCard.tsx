@@ -45,6 +45,7 @@ export default function OrderCard() {
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [specialRequirements, setSpecialRequirements] = useState("");
   const [finalPrice, setfinalPrice] = useState(0);
+  const [loadScript, setLoadScript] = useState(false);
   useEffect(() => {
     const total = ordereditems.reduce((total, item) => {
       const price = item.item.price[item.selectedType];
@@ -108,6 +109,7 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
+    setLoadScript(true);
     createOrder();
     // router.push("/Detail");
   };
@@ -240,10 +242,12 @@ export default function OrderCard() {
 
   return (
     <div className="w-full max-w-md mx-auto p-4">
-      <Script
-        type="text/javascript"
-        src="https://checkout.razorpay.com/v1/checkout.js"
-      />
+      {loadScript && (
+        <Script
+          type="text/javascript"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
+      )}
       <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back

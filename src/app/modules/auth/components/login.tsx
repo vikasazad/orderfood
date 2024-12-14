@@ -77,6 +77,7 @@ export default function Login() {
     console.log("Failed to decode data.");
   }
   const handlePhoneSubmit = async (e: React.FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     try {
       const formattedNumber = `+${91}${phoneNumber}`;
@@ -88,7 +89,10 @@ export default function Login() {
       setVerificationId(phoneOtpRes.verificationId);
       setStage("otp");
       startCountdown(); // Start countdown here
+
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
       toast.error("Something went wrong");
       console.error("Error in handleRegisterSubmit:", error);
     }
@@ -166,8 +170,14 @@ export default function Login() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       required
+                      autoFocus
                     />
-                    <Button type="submit">Send OTP</Button>
+                    <Button type="submit">
+                      {isLoading && (
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Send OTP
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -179,6 +189,7 @@ export default function Login() {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       required
+                      autoFocus
                     />
                     <div className="text-sm text-gray-500">
                       {count > 0
@@ -210,4 +221,4 @@ export default function Login() {
     </>
   );
 }
-// http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiNiIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiNSJ9LCJpYXQiOjE1MTYyMzkwMjJ9.Tyayi-ozaJ5j6bFvZlb7HLmsA-NqyQOPt7vUnfxiLuI
+// http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiNiIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiIn19.Eq-sf6OZdlLUAmZHM3rP0Zxc5J6dFd7KaB3CzKFh8cA&__vercel_draft=1
