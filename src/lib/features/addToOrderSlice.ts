@@ -5,7 +5,7 @@ const initialState = {
   addedItemIds: [] as any[],
   finalOrder: {} as any,
   token: "",
-  user: {} as any,
+  user: { email: "", tableNo: "", tax: { gstPercentage: "" } } as any,
 };
 
 export const addToOrder = createSlice({
