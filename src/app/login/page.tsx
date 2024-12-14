@@ -1,12 +1,15 @@
-import React from "react";
-import Login from "../modules/auth/components/login";
+import React, { Suspense } from "react";
 
-const page = () => {
+const Login = React.lazy(() => import("../modules/auth/components/login"));
+
+const Page = () => {
   return (
     <div>
-      <Login />
+      <Suspense fallback={<p>Loading...</p>}>
+        <Login />
+      </Suspense>
     </div>
   );
 };
 
-export default page;
+export default Page;
