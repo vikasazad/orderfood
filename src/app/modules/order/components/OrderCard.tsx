@@ -29,7 +29,14 @@ import {
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { sendNotification } from "@/lib/sendNotification";
-import { calculateTax, calculateTotal, sendOrder } from "../utils/orderApi";
+import {
+  calculateTax,
+  calculateTotal,
+  getOnlineStaffFromFirestore,
+  removeTableByNumber,
+  sendOrder,
+  updateOrdersForAttendant,
+} from "../utils/orderApi";
 
 export default function OrderCard() {
   const router = useRouter();
@@ -93,7 +100,7 @@ export default function OrderCard() {
   console.log(finalPrice);
   function generateOrderId(restaurantCode: string, tableNo: string) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `${restaurantCode}-T${tableNo}-${randomNumber}`;
+    const orderId = `${restaurantCode}:T-${tableNo}:${randomNumber}`;
     return orderId;
   }
   const createOrderData = (data: any) => {
@@ -154,7 +161,7 @@ export default function OrderCard() {
           razorpaySignature: response.razorpay_signature,
         });
         if (data.isOk) {
-          const orderId = generateOrderId("ABS", "T-1");
+          const orderId = generateOrderId("ABS", table?.tableNo);
           const orderData: any = {
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -188,7 +195,12 @@ export default function OrderCard() {
           });
           dispatch(setFinalOrder(orderData));
           console.log(orderData);
-          sendOrder(orderData, token, "Xevair");
+          const attendant: any = await getOnlineStaffFromFirestore(
+            table?.email
+          );
+          sendOrder(orderData, token, attendant); // this token has to be of customer
+          updateOrdersForAttendant(attendant?.name, orderId);
+          removeTableByNumber(table?.email, table?.tableNo);
           router.push("/orderConfirmation");
           sendNotification(
             token,
@@ -196,7 +208,7 @@ export default function OrderCard() {
             "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
           );
         } else {
-          const orderId = generateOrderId("ABS", "T-1");
+          const orderId = generateOrderId("ABS", table?.tableNo);
           console.log("New Order ID:", orderId);
           console.log("first", ordereditems);
           const orderData: any = {

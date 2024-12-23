@@ -38,7 +38,6 @@ import { Separator } from "@/components/ui/separator";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { createOrder, getOrderData } from "../../auth/utils/authApi";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 
@@ -83,25 +82,25 @@ export default function Header({ data }: { data: any }) {
 
   console.log("staff", orderData);
   console.log("DATA", orderSelectedItems);
-  const handleItemSelect = (orderId: string, itemId: string) => {
-    setOrderSelectedItems((prevSelectedItems) => {
-      const updatedSelectedItems = {
-        ...prevSelectedItems,
-        [orderId]: prevSelectedItems[orderId]
-          ? prevSelectedItems[orderId].includes(`${itemId}`)
-            ? prevSelectedItems[orderId].filter((id) => id !== `${itemId}`)
-            : [...prevSelectedItems[orderId], `${itemId}`]
-          : [`${itemId}`],
-      };
-      return updatedSelectedItems;
-    });
-  };
+  // const handleItemSelect = (orderId: string, itemId: string) => {
+  //   setOrderSelectedItems((prevSelectedItems) => {
+  //     const updatedSelectedItems = {
+  //       ...prevSelectedItems,
+  //       [orderId]: prevSelectedItems[orderId]
+  //         ? prevSelectedItems[orderId].includes(`${itemId}`)
+  //           ? prevSelectedItems[orderId].filter((id) => id !== `${itemId}`)
+  //           : [...prevSelectedItems[orderId], `${itemId}`]
+  //         : [`${itemId}`],
+  //     };
+  //     return updatedSelectedItems;
+  //   });
+  // };
 
-  const handleCancelSelected = (orderId: string) => {
-    if (orderSelectedItems[orderId]?.length > 0) {
-      setIsDialogOpen(true);
-    }
-  };
+  // const handleCancelSelected = (orderId: string) => {
+  //   if (orderSelectedItems[orderId]?.length > 0) {
+  //     setIsDialogOpen(true);
+  //   }
+  // };
 
   const handleConfirmCancellation = () => {
     console.log({
@@ -290,7 +289,7 @@ export default function Header({ data }: { data: any }) {
                             <div className="space-y-4">
                               <div className="flex justify-between items-center">
                                 <h3 className="font-semibold">Order Items</h3>
-                                <Button
+                                {/* <Button
                                   variant="destructive"
                                   size="sm"
                                   onClick={() =>
@@ -303,7 +302,7 @@ export default function Header({ data }: { data: any }) {
                                   }
                                 >
                                   Cancel Selected
-                                </Button>
+                                </Button> */}
                               </div>
 
                               <div className="divide-y">
@@ -312,14 +311,14 @@ export default function Header({ data }: { data: any }) {
                                     key={index}
                                     className=" flex items-center gap-4"
                                   >
-                                    <Checkbox
+                                    {/* <Checkbox
                                       checked={orderSelectedItems[
                                         item.orderId
                                       ]?.includes(`${itm.id}`)}
                                       onCheckedChange={() =>
                                         handleItemSelect(item.orderId, itm.id)
                                       }
-                                    />
+                                    /> */}
                                     <div className="flex-1">
                                       <div className="font-medium">
                                         {itm.name}

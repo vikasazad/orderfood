@@ -19,6 +19,8 @@ import { jwtVerify } from "jose";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/lib/store";
 import { addUser } from "@/lib/features/addToOrderSlice";
+import { checkTableAvailability } from "../utils/serverApi";
+import TableOccupiedMessage from "@/components/ui/table-occupied-message";
 // Custom hook for countdown timer
 const useCountdown = (initialCount: number) => {
   const [count, setCount] = useState(0);
@@ -43,6 +45,7 @@ export default function Login() {
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidTable, setIsValidTable] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
@@ -57,9 +60,15 @@ export default function Login() {
     }
     try {
       const key = new TextEncoder().encode(secretKey);
-      const decoded = await jwtVerify(token, key, {
+      const decoded: any = await jwtVerify(token, key, {
         algorithms: ["HS256"],
       });
+      const res = await checkTableAvailability(
+        decoded?.payload.email,
+        decoded?.payload.tableNo
+      );
+      console.log("res", res);
+      setIsValidTable(res);
       return decoded;
     } catch (error) {
       console.error("Invalid or expired token:", error);
@@ -75,6 +84,10 @@ export default function Login() {
     });
   } else {
     console.log("Failed to decode data.");
+  }
+
+  if (!isValidTable) {
+    return <TableOccupiedMessage />;
   }
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     setIsLoading(true);
@@ -98,9 +111,8 @@ export default function Login() {
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleOtpSubmit = async () => {
+    setIsLoading(true); // Add loading state
     console.log("handleOtpSubmit called with values:", otp);
 
     try {
@@ -111,21 +123,22 @@ export default function Login() {
       if (!phoneVerified) {
         toast.error("Invalid phone OTP");
         console.log("Invalid phone OTP");
+        setIsLoading(false);
         return;
       }
 
-      toast.success("Registration successful!");
-      console.log("User registration successful!");
+      // Set state and show toast before navigation
+      toast.success("Verification successful!");
+      console.log("User verification successful!");
 
-      router.push(`/`);
+      // Use replace to prevent back navigation to login
+      await router.replace("/");
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);
     } finally {
       setIsLoading(false);
-      console.log("handleOtpSubmit process finished.");
     }
-    console.log("OTP submitted:", otp);
   };
 
   const handleResendOtp = async () => {
@@ -181,24 +194,30 @@ export default function Login() {
                   </div>
                 </form>
               ) : (
-                <form onSubmit={handleOtpSubmit}>
-                  <div className="flex flex-col space-y-4">
-                    <Input
-                      type="text"
-                      placeholder="Enter OTP"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      required
-                      autoFocus
-                    />
-                    <div className="text-sm text-gray-500">
-                      {count > 0
-                        ? `Resend OTP in ${count}s`
-                        : "You can resend OTP now"}
-                    </div>
-                    <Button type="submit">Verify OTP</Button>
+                <div className="flex flex-col space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                  <div className="text-sm text-gray-500">
+                    {count > 0
+                      ? `Resend OTP in ${count}s`
+                      : "You can resend OTP now"}
                   </div>
-                </form>
+                  <Button
+                    onClick={() => handleOtpSubmit()}
+                    disabled={isLoading}
+                  >
+                    {isLoading && (
+                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Verify OTP
+                  </Button>
+                </div>
               )}
             </CardContent>
             <CardFooter>
@@ -222,3 +241,4 @@ export default function Login() {
   );
 }
 // http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiNiIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiIn19.Eq-sf6OZdlLUAmZHM3rP0Zxc5J6dFd7KaB3CzKFh8cA&__vercel_draft=1
+// http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiOCIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiIn19.DTiaFgsCRkNAV0ln4-ut322jwZM21wMhUE-YK2faCEk
