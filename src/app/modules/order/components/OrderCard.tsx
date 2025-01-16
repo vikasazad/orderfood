@@ -34,6 +34,7 @@ import {
   calculateTotal,
   getOnlineStaffFromFirestore,
   removeTableByNumber,
+  sendHotelOrder,
   sendOrder,
   updateOrdersForAttendant,
 } from "../utils/orderApi";
@@ -185,7 +186,7 @@ export default function OrderCard() {
               hour12: true,
             }),
             timeOfService: "",
-            tableNo: `T-${table?.tableNo}`,
+            tableNo: table?.tableNo,
             estimatedDeliveryTime: "",
             deliveryAddress: "",
             specialrequirements: specialRequirements,
@@ -198,9 +199,15 @@ export default function OrderCard() {
           const attendant: any = await getOnlineStaffFromFirestore(
             table?.email
           );
-          sendOrder(orderData, token, attendant); // this token has to be of customer
+          if (table?.tag === "hotel") {
+            sendHotelOrder(orderData, attendant, table?.tableNo); // this token has to be of customer
+          } else {
+            sendOrder(orderData, token, attendant); // this token has to be of customer
+          }
           updateOrdersForAttendant(attendant?.name, orderId);
-          removeTableByNumber(table?.email, table?.tableNo);
+          if (table?.tag === "restaurant") {
+            removeTableByNumber(table?.email, table?.tableNo);
+          }
           router.push("/orderConfirmation");
           sendNotification(
             token,

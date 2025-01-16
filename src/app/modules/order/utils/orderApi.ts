@@ -127,6 +127,124 @@ export async function sendOrder(orderData: any, token: string, attendant: any) {
     console.error("Error updating order:", error);
   }
 }
+export async function sendHotelOrder(
+  orderData: any,
+  attendant: any,
+  roomNo: string
+) {
+  console.log("HERE");
+
+  const newOrder = {
+    orderId: orderData.orderId,
+    specialRequirement: orderData.specialrequirements || "",
+    items: orderData.orderedItem || [],
+    attendant: attendant.name,
+    attendantToken: attendant.token || "",
+    status: "Order placed",
+    timeOfRequest: new Date().toISOString(),
+    timeOfFullfilment: "",
+    payment: {
+      transctionId: orderData.razorpayOrderId || "",
+      paymentStatus: "paid",
+      paymentType: "single",
+      mode: "online",
+      paymentId: orderData.razorpayPaymentId || "",
+      subtotal: orderData.subtotal,
+      price: orderData.orderAmount || 0,
+      priceAfterDiscount: "",
+      timeOfTransaction: new Date().toISOString(),
+      gst: {
+        gstAmount: orderData.gstAmount,
+        gstPercentage: orderData.gstPercentage,
+        cgstAmount: "",
+        cgstPercentage: "",
+        sgstAmount: "",
+        sgstPercentage: "",
+      },
+      discount: {
+        type: "none",
+        amount: 0,
+        code: "",
+      },
+    },
+  };
+
+  const newTransaction = {
+    location: orderData.tableNo || "",
+    against: orderData.orderId || "",
+    attendant: attendant.name || "",
+    attendantToken: attendant.token || "",
+    bookingId: "",
+    payment: {
+      paymentStatus: "paid",
+      mode: "online",
+      paymentId: orderData.razorpayPaymentId || "",
+      timeOfTransaction: new Date().toISOString(),
+      price: orderData.orderAmount || 0,
+      priceAfterDiscount: "",
+      gst: {
+        gstAmount: "",
+        gstPercentage: "",
+        cgstAmount: "",
+        cgstPercentage: "",
+        sgstAmount: "",
+        sgstPercentage: "",
+      },
+      discount: {
+        type: "",
+        amount: "",
+        code: "",
+      },
+    },
+  };
+
+  const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const rooms = data?.live?.rooms || [];
+
+      let roomFound = false;
+
+      // Iterate over rooms to find the matching roomNo
+      for (const room of rooms) {
+        if (room.bookingDetails?.location === roomNo) {
+          roomFound = true;
+
+          // Add the new order to diningDetails.orders
+          room.diningDetails.orders = [
+            ...(room.diningDetails.orders || []),
+            newOrder,
+          ];
+
+          room.diningDetails.attendant = attendant.name;
+          room.diningDetails.attendantToken = attendant.token || "";
+          room.diningDetails.timeOfRequest = new Date().toISOString();
+
+          // Add the new transaction
+          room.transctions = [...(room.transctions || []), newTransaction];
+
+          console.log(`Updates applied for roomNo: ${roomNo}`);
+        }
+      }
+
+      if (!roomFound) {
+        console.error(`No room found with roomNo: ${roomNo}`);
+      }
+
+      console.log("room found", rooms);
+
+      // Save the updated data back to Firestore
+      await updateDoc(docRef, { "live.rooms": rooms });
+      console.log("Data updated successfully.");
+    } else {
+      console.error("Document does not exist.");
+    }
+  } catch (error) {
+    console.error("Error updating order:", error);
+  }
+}
 
 export async function getOnlineStaffFromFirestore(email: string) {
   const docRef = doc(db, email, "info");

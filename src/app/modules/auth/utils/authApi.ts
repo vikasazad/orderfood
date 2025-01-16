@@ -37,10 +37,47 @@ export function getOrderData(
 
   return unsubscribe;
 }
+export function getOrderDataHotel(
+  email: string,
+  phone: string,
+  callback: (data: any) => void
+) {
+  if (!email || !phone) {
+    console.error("Email or phone is missing.");
+    return;
+  }
+
+  const docRef = doc(db, email, "hotel");
+
+  const unsubscribe = onSnapshot(
+    docRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data().live.rooms;
+
+        const updatedData = data.filter(
+          (item: any) => item.bookingDetails?.customer?.phone === phone
+        );
+
+        console.log("Updated data:", updatedData);
+        if (callback) callback(updatedData);
+      } else {
+        console.error("Document does not exist.");
+      }
+    },
+    (error) => {
+      console.error("Error fetching real-time data:", error);
+    }
+  );
+
+  return unsubscribe;
+}
 
 export async function createOrder(
   email: string,
   phone: string,
+  tag: string,
+  tableNo: string,
   orderData: any,
   amount: number,
   status: string,
@@ -96,9 +133,13 @@ export async function createOrder(
           gstAmount,
           gstPercentage,
           attendent: orderData[0].diningDetails.attendant,
-          tableNo: orderData[0].diningDetails.location,
+          tableNo: tableNo,
         };
-        saveInfo(info);
+        if (tag === "hotel") {
+          saveHotelDiningInfo(info);
+        } else {
+          saveInfo(info);
+        }
         console.log(info);
 
         // sendOrder(orderData, token, "Justin");
@@ -238,6 +279,137 @@ export async function saveInfo(info: any) {
       // Step 3: Update Firestore with modified data
       await updateDoc(docRef, {
         "live.tables": updatedTablesWithTransactions,
+      });
+
+      console.log("Orders and transactions updated successfully.");
+    } else {
+      console.error("Document does not exist.");
+    }
+  } catch (error) {
+    console.error("Error updating orders and transactions:", error);
+  }
+}
+export async function saveHotelDiningInfo(info: any) {
+  console.log(info);
+
+  const {
+    razorpayOrderId,
+    razorpayPaymentId,
+    email,
+    amount,
+    orderIds,
+    gstAmount,
+    gstPercentage,
+    attendent,
+    tableNo,
+  } = info;
+  console.log(
+    "EEEEEEEEE",
+    razorpayOrderId,
+    razorpayPaymentId,
+    email,
+    amount,
+    orderIds,
+    gstAmount,
+    gstPercentage,
+    attendent,
+    tableNo
+  );
+  const paymentType = orderIds.length === 1 ? "single" : "combined";
+  const docRef = doc(db, email, "hotel"); // Reference to the document
+  try {
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const tables = data.live.rooms;
+
+      // Step 1: Update orders in diningDetails
+      const updatedTables = tables.map((table: any) => {
+        if (table.diningDetails && table.diningDetails.orders) {
+          const updatedOrders = table.diningDetails.orders.map((order: any) => {
+            const matchedOrder = orderIds.find(
+              (o: any) => o.id === order.orderId
+            );
+
+            // Update the payment details if orderId matches
+            if (matchedOrder) {
+              return {
+                ...order,
+                payment: {
+                  ...order.payment,
+                  mode: "online",
+                  paymentType: paymentType,
+                  paymentId: razorpayPaymentId,
+                  paymentStatus: "paid",
+                  timeOfTransaction: new Date().toISOString(),
+                  transctionId: razorpayOrderId,
+                },
+              };
+            }
+            return order;
+          });
+
+          return {
+            ...table,
+            diningDetails: {
+              ...table.diningDetails,
+              orders: updatedOrders,
+            },
+          };
+        }
+        return table;
+      });
+
+      // Step 2: Add new transaction object
+      const combinedOrderIds = orderIds.map((o: any) => o.id).join(","); // Combine all orderIds
+      const newTransaction = {
+        location: tableNo,
+        against: combinedOrderIds,
+        attendant: attendent,
+        bookingId: "",
+        payment: {
+          paymentStatus: "paid",
+          mode: "online",
+          paymentType: paymentType,
+          paymentId: razorpayPaymentId || "",
+          timeOfTransaction: new Date().toISOString(),
+          price: amount || 0,
+          priceAfterDiscount: "",
+          gst: {
+            gstAmount: gstAmount,
+            gstPercentage: gstPercentage,
+            cgstAmount: "",
+            cgstPercentage: "",
+            sgstAmount: "",
+            sgstPercentage: "",
+          },
+          discount: {
+            type: "",
+            amount: "",
+            code: "",
+          },
+        },
+      };
+
+      console.log("newTransaction", newTransaction);
+
+      const updatedTablesWithTransactions = updatedTables.map((table: any) => {
+        if (table.bookingDetails.location === tableNo) {
+          const existingTransactions = table.transctions || [];
+          return {
+            ...table,
+            transctions: [...existingTransactions, newTransaction],
+          };
+        }
+        return table;
+      });
+
+      console.log(updatedTablesWithTransactions);
+
+      // Step 3: Update Firestore with modified data
+      await updateDoc(docRef, {
+        "live.rooms": updatedTablesWithTransactions,
       });
 
       console.log("Orders and transactions updated successfully.");

@@ -63,12 +63,15 @@ export default function Login() {
       const decoded: any = await jwtVerify(token, key, {
         algorithms: ["HS256"],
       });
-      const res = await checkTableAvailability(
-        decoded?.payload.email,
-        decoded?.payload.tableNo
-      );
-      console.log("res", res);
-      setIsValidTable(res);
+      if (decoded?.payload?.tag === "restaurant") {
+        const res = await checkTableAvailability(
+          decoded?.payload.email,
+          decoded?.payload.tableNo
+        );
+        console.log("res", res);
+        setIsValidTable(res);
+      }
+
       return decoded;
     } catch (error) {
       console.error("Invalid or expired token:", error);
@@ -80,7 +83,14 @@ export default function Login() {
   if (decodedData) {
     decodedData.then((data) => {
       console.log("Decoded Data:", data);
-      dispatch(addUser({ ...data?.payload, phone: phoneNumber }));
+      if (data?.payload.tag === "hotel") {
+        dispatch(
+          addUser({ ...data?.payload, phone: data?.payload?.phoneNumber })
+        );
+        router.push("/");
+      } else {
+        dispatch(addUser({ ...data?.payload, phone: phoneNumber }));
+      }
     });
   } else {
     console.log("Failed to decode data.");
@@ -132,7 +142,7 @@ export default function Login() {
       console.log("User verification successful!");
 
       // Use replace to prevent back navigation to login
-      await router.replace("/");
+      router.replace("/");
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);

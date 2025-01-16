@@ -37,7 +37,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { createOrder, getOrderData } from "../../auth/utils/authApi";
+import {
+  createOrder,
+  getOrderData,
+  getOrderDataHotel,
+} from "../../auth/utils/authApi";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 
@@ -63,21 +67,40 @@ export default function Header({ data }: { data: any }) {
       console.log("Email or phone is missing in table data.");
       return;
     }
-    const unsubscribe = getOrderData(
-      table.email,
-      table.phone,
-      (result: any) => {
-        if (result) {
-          setOrderData(result);
-        } else {
-          setOrderData([]);
+    if (table?.tag === "hotel") {
+      console.log("h1");
+      const unsubscribe = getOrderDataHotel(
+        table.email,
+        table.phone,
+        (result: any) => {
+          if (result) {
+            setOrderData(result);
+          } else {
+            setOrderData([]);
+          }
         }
-      }
-    );
+      );
 
-    return () => {
-      if (unsubscribe) unsubscribe(); // Ensure cleanup
-    };
+      return () => {
+        if (unsubscribe) unsubscribe(); // Ensure cleanup
+      };
+    } else {
+      const unsubscribe = getOrderData(
+        table.email,
+        table.phone,
+        (result: any) => {
+          if (result) {
+            setOrderData(result);
+          } else {
+            setOrderData([]);
+          }
+        }
+      );
+
+      return () => {
+        if (unsubscribe) unsubscribe(); // Ensure cleanup
+      };
+    }
   }, [table.email, table.phone]);
 
   console.log("staff", orderData);
@@ -198,6 +221,8 @@ export default function Header({ data }: { data: any }) {
     createOrder(
       table.email,
       table.phone,
+      table.tag,
+      table.tableNo,
       orderData,
       amount,
       status,
