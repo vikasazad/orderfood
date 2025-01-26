@@ -14,7 +14,7 @@ import {
 import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
 import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { jwtVerify } from "jose";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/lib/store";
@@ -40,7 +40,7 @@ const useCountdown = (initialCount: number) => {
 export default function Login() {
   const secretKey = "Vikas@1234";
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
+  // const router = useRouter();
   // const [data, setData] = useState<any>({});
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
@@ -143,7 +143,7 @@ export default function Login() {
       console.log("User verification successful!");
 
       // Use replace to prevent back navigation to login
-      router.push("/");
+      window.location.href = "/";
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);
