@@ -4,6 +4,7 @@ import { db } from "@/config/db/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export async function checkTableAvailability(email: string, tableNo: string) {
+  console.log("checkTableAvailability", email, tableNo);
   const docRef = doc(db, email, "restaurant");
   const docSnap = await getDoc(docRef);
 

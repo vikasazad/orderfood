@@ -64,6 +64,7 @@ export default function Login() {
         algorithms: ["HS256"],
       });
       if (decoded?.payload?.tag === "restaurant") {
+        console.log("decoded", decoded);
         const res = await checkTableAvailability(
           decoded?.payload.email,
           decoded?.payload.tableNo
