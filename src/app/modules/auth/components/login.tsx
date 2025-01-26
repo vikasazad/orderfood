@@ -52,6 +52,14 @@ export default function Login() {
   const [count, startCountdown] = useCountdown(30);
   const searchParams = useSearchParams();
 
+  const resetZoom = () => {
+    document.body.style.zoom = "1";
+  };
+
+  useEffect(() => {
+    resetZoom();
+  }, []);
+
   async function decodeUrl() {
     const token = searchParams.get("token");
     if (!token) {
@@ -103,9 +111,7 @@ export default function Login() {
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur(); // Safely blur the currently focused element
-    } // Remove focus from the input field
+
     try {
       const formattedNumber = `+${91}${phoneNumber}`;
       console.log("Formatted phone number:", formattedNumber);
@@ -126,27 +132,23 @@ export default function Login() {
   };
 
   const handleOtpSubmit = async () => {
-    setIsLoading(true); // Add loading state
-    console.log("handleOtpSubmit called with values:", otp);
-
+    setIsLoading(true);
     try {
-      console.log("Verifying phone OTP...");
+      console.log("handleOtpSubmit called with values:", otp);
+
       const phoneVerified = await verifyOtp(verificationId, otp);
-      console.log("phoneVerified:", phoneVerified);
 
       if (!phoneVerified) {
         toast.error("Invalid phone OTP");
-        console.log("Invalid phone OTP");
         setIsLoading(false);
         return;
       }
 
-      // Set state and show toast before navigation
       toast.success("Verification successful!");
       console.log("User verification successful!");
 
-      // Use replace to prevent back navigation to login
-      document.body.focus();
+      // Reset zoom before navigating
+      resetZoom();
       router.push("/");
     } catch (error) {
       toast.error("Verification failed");
