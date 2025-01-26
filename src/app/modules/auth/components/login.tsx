@@ -14,7 +14,7 @@ import {
 import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
 import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { jwtVerify } from "jose";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/lib/store";
@@ -40,7 +40,7 @@ const useCountdown = (initialCount: number) => {
 export default function Login() {
   const secretKey = "Vikas@1234";
   const dispatch = useDispatch<AppDispatch>();
-  // const router = useRouter();
+  const router = useRouter();
   // const [data, setData] = useState<any>({});
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
@@ -88,7 +88,7 @@ export default function Login() {
         dispatch(
           addUser({ ...data?.payload, phone: data?.payload?.phoneNumber })
         );
-        window.location.href = "/";
+        router.push("/");
       } else {
         dispatch(addUser({ ...data?.payload, phone: phoneNumber }));
       }
@@ -103,6 +103,9 @@ export default function Login() {
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur(); // Safely blur the currently focused element
+    } // Remove focus from the input field
     try {
       const formattedNumber = `+${91}${phoneNumber}`;
       console.log("Formatted phone number:", formattedNumber);
@@ -143,7 +146,8 @@ export default function Login() {
       console.log("User verification successful!");
 
       // Use replace to prevent back navigation to login
-      window.location.href = "/";
+      document.body.focus();
+      router.push("/");
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);
