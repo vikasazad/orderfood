@@ -26,6 +26,14 @@ export default function Category({ data }: { data: Category[] }) {
     }, [] as Category[][]);
   }, [data]);
 
+  const getZoomLevel = () => {
+    const zoomLevel = window.innerWidth / document.documentElement.clientWidth;
+    return zoomLevel;
+  };
+
+  // Example usage
+  alert(`Current zoom level: ${getZoomLevel()}`);
+
   return (
     <div className="px-2 py-2">
       <div className="relative pb-4">

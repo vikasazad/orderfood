@@ -52,14 +52,6 @@ export default function Login() {
   const [count, startCountdown] = useCountdown(30);
   const searchParams = useSearchParams();
 
-  const resetZoom = () => {
-    document.body.style.zoom = "1";
-  };
-
-  useEffect(() => {
-    resetZoom();
-  }, []);
-
   async function decodeUrl() {
     const token = searchParams.get("token");
     if (!token) {
@@ -111,7 +103,6 @@ export default function Login() {
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
-
     try {
       const formattedNumber = `+${91}${phoneNumber}`;
       console.log("Formatted phone number:", formattedNumber);
@@ -132,23 +123,27 @@ export default function Login() {
   };
 
   const handleOtpSubmit = async () => {
-    setIsLoading(true);
-    try {
-      console.log("handleOtpSubmit called with values:", otp);
+    setIsLoading(true); // Add loading state
+    console.log("handleOtpSubmit called with values:", otp);
 
+    try {
+      console.log("Verifying phone OTP...");
       const phoneVerified = await verifyOtp(verificationId, otp);
+      console.log("phoneVerified:", phoneVerified);
 
       if (!phoneVerified) {
         toast.error("Invalid phone OTP");
+        console.log("Invalid phone OTP");
         setIsLoading(false);
         return;
       }
 
+      // Set state and show toast before navigation
       toast.success("Verification successful!");
       console.log("User verification successful!");
 
-      // Reset zoom before navigating
-      resetZoom();
+      // Use replace to prevent back navigation to login
+      document.body.focus();
       router.push("/");
     } catch (error) {
       toast.error("Verification failed");
