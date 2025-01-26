@@ -88,7 +88,7 @@ export default function Login() {
         dispatch(
           addUser({ ...data?.payload, phone: data?.payload?.phoneNumber })
         );
-        router.push("/");
+        window.location.href = "/";
       } else {
         dispatch(addUser({ ...data?.payload, phone: phoneNumber }));
       }
@@ -143,7 +143,7 @@ export default function Login() {
       console.log("User verification successful!");
 
       // Use replace to prevent back navigation to login
-      router.replace("/");
+      router.push("/");
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);
