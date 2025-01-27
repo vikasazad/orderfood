@@ -194,14 +194,17 @@ export default function Header({ data }: { data: any }) {
       result.amount = orderData.reduce((total: any, order: any) => {
         return (
           total +
-          order.diningDetails.orders.reduce((subTotal: any, orderItem: any) => {
-            return (
-              subTotal +
-              (orderItem.payment.paymentStatus === "paid"
-                ? orderItem.payment.price
-                : 0)
-            );
-          }, 0)
+          order?.diningDetails?.orders?.reduce(
+            (subTotal: any, orderItem: any) => {
+              return (
+                subTotal +
+                (orderItem.payment.paymentStatus === "paid"
+                  ? orderItem.payment.price
+                  : 0)
+              );
+            },
+            0
+          )
         );
       }, 0);
     }
@@ -231,6 +234,8 @@ export default function Header({ data }: { data: any }) {
       gstPercentage
     );
   };
+
+  console.log("orderDAta", orderData);
 
   return (
     <>
@@ -266,10 +271,10 @@ export default function Header({ data }: { data: any }) {
                 </SheetTitle>
               </SheetHeader>
 
-              {orderData.length > 0 ? (
+              {orderData[0]?.diningDetails.length > 0 ? (
                 <>
                   <div className="text-lg">Order Summary:</div>
-                  {orderData[0].diningDetails.orders.map(
+                  {orderData[0]?.diningDetails?.orders.map(
                     (item: any, i: any) => {
                       console.log(item);
                       return (
@@ -471,7 +476,7 @@ export default function Header({ data }: { data: any }) {
                 <p>Welcome to restaurant please order and enjoy</p>
               )}
               <SheetDescription></SheetDescription>
-              {orderData.length > 0 && (
+              {orderData?.diningDetails?.length > 0 && (
                 <SheetFooter className="w-[320px] mt-auto p-4 bg-background border-t sticky bottom-[-25]">
                   <div className="w-full">
                     {(() => {
