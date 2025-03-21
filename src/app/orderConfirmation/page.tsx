@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { clearCart } from "@/lib/features/addToOrderSlice";
+import React from "react";
 
 export default function OrderConfirmation() {
   const dispatch = useDispatch();
@@ -22,6 +23,19 @@ export default function OrderConfirmation() {
     (state: RootState) => state.addToOrderData.finalOrder
   );
   console.log("DATA", finalItem);
+  const table = useSelector((state: RootState) => state.addToOrderData.user);
+  console.log("HERETHEDATA", table);
+
+  // Add useEffect to handle auto-close
+  React.useEffect(() => {
+    if (finalItem && table?.tag === "hotel") {
+      const timer = setTimeout(() => {
+        window.close();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [finalItem, table]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
