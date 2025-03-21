@@ -162,7 +162,7 @@ export default function OrderCard() {
           razorpaySignature: response.razorpay_signature,
         });
         if (data.isOk) {
-          const orderId = generateOrderId("ABS", table?.tableNo);
+          const orderId = generateOrderId("ROS", table?.tableNo);
           const orderData: any = {
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -215,7 +215,7 @@ export default function OrderCard() {
             "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
           );
         } else {
-          const orderId = generateOrderId("ABS", table?.tableNo);
+          const orderId = generateOrderId("ROS", table?.tableNo);
           console.log("New Order ID:", orderId);
           console.log("first", ordereditems);
           const orderData: any = {
