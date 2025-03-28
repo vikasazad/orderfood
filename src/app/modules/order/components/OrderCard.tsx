@@ -208,7 +208,7 @@ export default function OrderCard() {
           if (table?.tag === "restaurant") {
             removeTableByNumber(table?.email, table?.tableNo);
           }
-          router.prefetch("/orderConfirmation");
+          router.push("/orderConfirmation");
           sendNotification(
             token,
             "New Order Received",
