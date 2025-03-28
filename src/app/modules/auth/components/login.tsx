@@ -183,7 +183,7 @@ export default function Login() {
         {info === "hotel" ? (
           <div className="flex justify-center items-center h-screen">
             <Image
-              src="/loader.svg"
+              src="/images/loader.svg"
               alt="Loading..."
               width={50}
               height={50}
