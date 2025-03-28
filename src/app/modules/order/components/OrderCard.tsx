@@ -160,7 +160,7 @@ export default function OrderCard() {
 
         if (data.isOk) {
           startTransition(async () => {
-            const orderId = generateOrderId("ROS", table?.tableNo);
+            const orderId = generateOrderId("RES", table?.tableNo);
             const orderData: any = {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,

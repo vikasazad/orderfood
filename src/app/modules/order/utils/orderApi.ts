@@ -135,6 +135,7 @@ export async function sendHotelOrder(
   console.log("HERE");
 
   const newOrder = {
+    location: orderData.tableNo || "",
     orderId: orderData.orderId,
     specialRequirement: orderData.specialrequirements || "",
     items: orderData.orderedItem || [],
