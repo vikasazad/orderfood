@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Minus, Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +54,8 @@ export default function OrderCard() {
   const [specialRequirements, setSpecialRequirements] = useState("");
   const [finalPrice, setfinalPrice] = useState(0);
   const [loadScript, setLoadScript] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
   useEffect(() => {
     const total = ordereditems.reduce((total, item) => {
       const price = item.item.price[item.selectedType];
@@ -146,7 +148,6 @@ export default function OrderCard() {
         color: "#121212",
       },
       handler: async function (response: any) {
-        // verify payment
         const res = await fetch("/api/verifyOrder", {
           method: "POST",
           body: JSON.stringify({
@@ -156,64 +157,67 @@ export default function OrderCard() {
           }),
         });
         const data = await res.json();
-        console.log("HERE", data, {
-          orderId: response.razorpay_order_id,
-          razorpayPaymentId: response.razorpay_payment_id,
-          razorpaySignature: response.razorpay_signature,
-        });
+
         if (data.isOk) {
-          const orderId = generateOrderId("ROS", table?.tableNo);
-          const orderData: any = {
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            orderId: orderId,
-            orderSuccess: true,
-            orderedItem: [],
-            orderAmount: finalPrice,
-            subtotal: calculateTotal(ordereditems),
-            gstPercentage: table?.tax.gstPercentage || "",
-            gstAmount: table?.tax.gstPercentage
-              ? calculateTax(ordereditems, table?.tax.gstPercentage)
-              : "",
-            contactNo: table?.phone,
-            name: "",
-            email: "",
-            problemFood: "",
-            problemService: "",
-            timeOfOrder: new Date().toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            timeOfService: "",
-            tableNo: table?.tableNo,
-            estimatedDeliveryTime: "",
-            deliveryAddress: "",
-            specialrequirements: specialRequirements,
-          };
-          ordereditems.map((er: any) => {
-            return orderData.orderedItem.push(createOrderData(er));
+          startTransition(async () => {
+            const orderId = generateOrderId("ROS", table?.tableNo);
+            const orderData: any = {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              orderId: orderId,
+              orderSuccess: true,
+              orderedItem: [],
+              orderAmount: finalPrice,
+              subtotal: calculateTotal(ordereditems),
+              gstPercentage: table?.tax.gstPercentage || "",
+              gstAmount: table?.tax.gstPercentage
+                ? calculateTax(ordereditems, table?.tax.gstPercentage)
+                : "",
+              contactNo: table?.phone,
+              name: "",
+              email: "",
+              problemFood: "",
+              problemService: "",
+              timeOfOrder: new Date().toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              timeOfService: "",
+              tableNo: table?.tableNo,
+              estimatedDeliveryTime: "",
+              deliveryAddress: "",
+              specialrequirements: specialRequirements,
+            };
+
+            ordereditems.map((er: any) => {
+              return orderData.orderedItem.push(createOrderData(er));
+            });
+
+            dispatch(setFinalOrder(orderData));
+            const attendant: any = await getOnlineStaffFromFirestore(
+              table?.email
+            );
+
+            if (table?.tag === "hotel") {
+              await sendHotelOrder(orderData, attendant, table?.tableNo);
+            } else {
+              await sendOrder(orderData, token, attendant);
+            }
+
+            await updateOrdersForAttendant(attendant?.name, orderId);
+            if (table?.tag === "restaurant") {
+              await removeTableByNumber(table?.email, table?.tableNo);
+            }
+
+            await sendNotification(
+              token,
+              "New Order Received",
+              "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
+            );
+
+            router.push("/orderConfirmation");
           });
-          dispatch(setFinalOrder(orderData));
-          console.log(orderData);
-          const attendant: any = await getOnlineStaffFromFirestore(
-            table?.email
-          );
-          if (table?.tag === "hotel") {
-            sendHotelOrder(orderData, attendant, table?.tableNo); // this token has to be of customer
-          } else {
-            sendOrder(orderData, token, attendant); // this token has to be of customer
-          }
-          updateOrdersForAttendant(attendant?.name, orderId);
-          if (table?.tag === "restaurant") {
-            removeTableByNumber(table?.email, table?.tableNo);
-          }
-          router.push("/orderConfirmation");
-          sendNotification(
-            token,
-            "New Order Received",
-            "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
-          );
         } else {
           const orderId = generateOrderId("ROS", table?.tableNo);
           console.log("New Order ID:", orderId);
@@ -261,6 +265,16 @@ export default function OrderCard() {
 
   return (
     <div className="w-full max-w-md mx-auto p-4">
+      {isPending && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-sm text-muted-foreground">
+              Processing your order...
+            </p>
+          </div>
+        </div>
+      )}
       {loadScript && (
         <Script
           type="text/javascript"
