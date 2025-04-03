@@ -57,6 +57,7 @@ export default function Component({ data = [] }: { data?: any[] }) {
   };
 
   const handleAddToOrder = (item: any, selectedPortion: string) => {
+    console.log("AAAAAAAAAAAA", item, selectedPortion);
     dispatch(addData({ data: item, selectedType: selectedPortion }));
   };
 
