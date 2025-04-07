@@ -1,5 +1,5 @@
 import { db } from "@/config/db/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 export function calculateTotal(ordereditems: any) {
   return ordereditems.reduce((total: any, item: any) => {
@@ -381,6 +381,63 @@ export async function removeTableByNumber(email: string, tableNo: string) {
     return true;
   } else {
     console.log("Document does not exist.");
+    return false;
+  }
+}
+
+export async function addKitchenOrder(
+  email: string,
+  orderId: string,
+  customerName: string,
+  items: any[],
+  price: number
+) {
+  try {
+    // Reference to the Firestore document containing kitchen orders
+    const docRef = doc(db, email, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      // If kitchen document doesn't exist, create it with initial structure
+      await setDoc(docRef, {
+        orders: {},
+      });
+    }
+
+    const kitchenData = docSnap.exists()
+      ? docSnap.data().kitchen
+      : { orders: {} };
+
+    // Generate a unique order ID if not provided
+
+    // Create the new order object with required fields
+    const newOrder = {
+      id: orderId,
+      customerName: customerName,
+      status: "New",
+      items: items,
+      createdAt: new Date().toString(),
+      startedAt: null,
+      completedAt: null,
+      totalAmount: price,
+      preparationTimeMinutes: null,
+    };
+
+    // Add the new order to the kitchen orders
+    const updatedOrders = {
+      [orderId]: newOrder,
+      ...kitchenData.orders,
+    };
+
+    // Update the document with the new order
+    await updateDoc(docRef, {
+      "kitchen.orders": updatedOrders,
+    });
+
+    console.log("Kitchen order added successfully");
+    return true;
+  } catch (error) {
+    console.error("Error adding kitchen order: ", error);
     return false;
   }
 }

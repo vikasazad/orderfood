@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { sendNotification } from "@/lib/sendNotification";
 import {
+  addKitchenOrder,
   calculateTax,
   calculateTotal,
   getOnlineStaffFromFirestore,
@@ -201,6 +202,13 @@ export default function OrderCard() {
 
             if (table?.tag === "hotel") {
               await sendHotelOrder(orderData, attendant, table?.tableNo);
+              await addKitchenOrder(
+                table?.email,
+                generateOrderId("RES", table?.tableNo),
+                table?.name,
+                orderData?.orderItem,
+                finalPrice
+              );
             } else {
               await sendOrder(orderData, token, attendant);
             }
