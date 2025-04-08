@@ -205,15 +205,27 @@ export default function OrderCard() {
 
             if (table?.tag === "hotel") {
               await sendHotelOrder(orderData, attendant, table?.tableNo);
+              
               await addKitchenOrder(
                 table?.email,
                 generateOrderId("RES", table?.tableNo),
                 table?.name,
-                orderData?.orderItem,
+                ordereditems.map((er: any) => {
+                  return createOrderData(er);
+                }),
                 finalPrice
               );
             } else {
               await sendOrder(orderData, token, attendant);
+              await addKitchenOrder(
+                table?.email,
+                generateOrderId("RES", table?.tableNo),
+                table?.name,
+                ordereditems.map((er: any) => {
+                  return createOrderData(er);
+                }),
+                finalPrice
+              );
             }
 
             await updateOrdersForAttendant(attendant?.name, orderId);
