@@ -132,8 +132,11 @@ export default function OrderCard() {
     });
     const data = await res.json();
 
+    // console.log("asdfasd", process.env.RAZORPAY_API_KEY);
+    // console.log("asdfasd", process.env.NEXT_PUBLIC_RAZORPAY_API_KEY);
+
     const paymentData = {
-      key: process.env.RAZORPAY_API_KEY,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
       order_id: data.id,
       name: "Rosier",
       description: "Thank you",
