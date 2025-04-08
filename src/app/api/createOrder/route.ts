@@ -3,7 +3,7 @@ import Razorpay from "razorpay";
 
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY as string,
-  key_secret: process.env.NEXT_PUBLIC_RAZORPAY_API_SECRET,
+  key_secret: process.env.NEXT_PUBLIC_RAZORPAY_API_SECRET as string,
 });
 
 export async function POST(req: Request) {
