@@ -47,9 +47,8 @@ import Script from "next/script";
 
 export default function Header({ data }: { data: any }) {
   const dispatch = useDispatch<AppDispatch>();
-
-  const table = useSelector((state: RootState) => state.addToOrderData.user);
-  console.log("HERETHEDATA", table);
+  const { user } = useSelector((state: RootState) => state.auth);
+  console.log("HERETHEDATA", user);
   const [expanded, setExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
@@ -63,15 +62,15 @@ export default function Header({ data }: { data: any }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!table?.email || !table?.phone) {
+    if (!user?.email || !user?.phone) {
       console.log("Email or phone is missing in table data.");
       return;
     }
-    if (table?.tag === "hotel") {
+    if (user?.tag === "concierge") {
       console.log("h1");
       const unsubscribe = getOrderDataHotel(
-        table.email,
-        table.phone,
+        user.email,
+        user.phone,
         (result: any) => {
           if (result) {
             setOrderData(result);
@@ -85,23 +84,25 @@ export default function Header({ data }: { data: any }) {
         if (unsubscribe) unsubscribe(); // Ensure cleanup
       };
     } else {
-      const unsubscribe = getOrderData(
-        table.email,
-        table.phone,
-        (result: any) => {
-          if (result) {
-            setOrderData(result);
-          } else {
-            setOrderData([]);
+      if (user.email && user.phone) {
+        const unsubscribe = getOrderData(
+          user.email,
+          user.phone,
+          (result: any) => {
+            if (result) {
+              setOrderData(result);
+            } else {
+              setOrderData([]);
+            }
           }
-        }
-      );
+        );
 
-      return () => {
-        if (unsubscribe) unsubscribe(); // Ensure cleanup
-      };
+        return () => {
+          if (unsubscribe) unsubscribe(); // Ensure cleanup
+        };
+      }
     }
-  }, [table.email, table.phone]);
+  }, [user.email, user.phone]);
 
   console.log("staff", orderData);
   console.log("DATA", orderSelectedItems);
@@ -216,16 +217,16 @@ export default function Header({ data }: { data: any }) {
     if (open) {
       setOpen(false);
     }
-    const gstPercentage = table?.tax?.gstPercentage;
+    const gstPercentage = user?.tax?.gstPercentage;
     const { amount, status, pendingOrders, totalPendingGstAmount } =
       calculateGrandTotal();
 
     setLoadScript(true);
     createOrder(
-      table.email,
-      table.phone,
-      table.tag,
-      table.tableNo,
+      user.email,
+      user.phone,
+      user.tag,
+      user.tableNo,
       orderData,
       amount,
       status,

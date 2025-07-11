@@ -110,7 +110,7 @@ export default function Component({ data = [] }: { data?: any[] }) {
                                 className="object-cover"
                                 fill
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                priority={index === 0}
+                                priority
                               />
                             </div>
                           </CarouselItem>

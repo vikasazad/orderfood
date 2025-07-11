@@ -43,8 +43,8 @@ import {
 export default function OrderCard() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const table = useSelector((state: RootState) => state.addToOrderData.user);
-  console.log("TABLE", table);
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const ordereditems = useSelector(
     (state: RootState) => state.addToOrderData.addToOrderData
   );
@@ -62,11 +62,11 @@ export default function OrderCard() {
       const price = item.item.price[item.selectedType];
       return total + price * item.count;
     }, 0);
-    const digit = Number(table?.tax.gstPercentage) || 0;
+    const digit = Number(user?.tax.gstPercentage) || 0;
     console.log(digit);
     const tax = Math.round((total * digit) / 100);
     setfinalPrice(total + tax);
-  }, [ordereditems, table]);
+  }, [ordereditems, user]);
 
   const removeAfterZero = (item: any, id: any) => {
     if (ordereditems.length === 1) {
@@ -142,8 +142,8 @@ export default function OrderCard() {
       description: "Thank you",
       image: "",
       prefill: {
-        name: table?.phone,
-        contact: table?.phone,
+        name: user?.phone,
+        contact: user?.phone,
       },
       notes: {
         address: "Razorpay Corporate Office",
@@ -164,7 +164,7 @@ export default function OrderCard() {
 
         if (data.isOk) {
           startTransition(async () => {
-            const orderId = generateOrderId("RES", table?.tableNo);
+            const orderId = generateOrderId("RES", user?.tableNo);
             const orderData: any = {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
@@ -173,11 +173,11 @@ export default function OrderCard() {
               orderedItem: [],
               orderAmount: finalPrice,
               subtotal: calculateTotal(ordereditems),
-              gstPercentage: table?.tax.gstPercentage || "",
-              gstAmount: table?.tax.gstPercentage
-                ? calculateTax(ordereditems, table?.tax.gstPercentage)
+              gstPercentage: user?.tax.gstPercentage || "",
+              gstAmount: user?.tax.gstPercentage
+                ? calculateTax(ordereditems, user?.tax.gstPercentage)
                 : "",
-              contactNo: table?.phone,
+              contactNo: user?.phone,
               name: "",
               email: "",
               problemFood: "",
@@ -188,7 +188,7 @@ export default function OrderCard() {
                 hour12: true,
               }),
               timeOfService: "",
-              tableNo: table?.tableNo,
+              tableNo: user?.tableNo,
               estimatedDeliveryTime: "",
               deliveryAddress: "",
               specialrequirements: specialRequirements,
@@ -200,16 +200,16 @@ export default function OrderCard() {
 
             dispatch(setFinalOrder(orderData));
             const attendant: any = await getOnlineStaffFromFirestore(
-              table?.email
+              user?.email
             );
 
-            if (table?.tag === "hotel") {
-              await sendHotelOrder(orderData, attendant, table?.tableNo);
-              
+            if (user?.tag === "concierge") {
+              await sendHotelOrder(orderData, attendant, user?.tableNo);
+
               await addKitchenOrder(
-                table?.email,
-                generateOrderId("RES", table?.tableNo),
-                table?.name,
+                user?.email,
+                generateOrderId("RES", user?.tableNo),
+                user?.name,
                 ordereditems.map((er: any) => {
                   return createOrderData(er);
                 }),
@@ -218,9 +218,9 @@ export default function OrderCard() {
             } else {
               await sendOrder(orderData, token, attendant);
               await addKitchenOrder(
-                table?.email,
-                generateOrderId("RES", table?.tableNo),
-                table?.name,
+                user?.email,
+                generateOrderId("RES", user?.tableNo),
+                user?.name,
                 ordereditems.map((er: any) => {
                   return createOrderData(er);
                 }),
@@ -229,8 +229,8 @@ export default function OrderCard() {
             }
 
             await updateOrdersForAttendant(attendant?.name, orderId);
-            if (table?.tag === "restaurant") {
-              await removeTableByNumber(table?.email, table?.tableNo);
+            if (user?.tag === "restaurant") {
+              await removeTableByNumber(user?.email, user?.tableNo);
             }
 
             await sendNotification(
@@ -242,7 +242,7 @@ export default function OrderCard() {
             router.push("/orderConfirmation");
           });
         } else {
-          const orderId = generateOrderId("ROS", table?.tableNo);
+          const orderId = generateOrderId("ROS", user?.tableNo);
           console.log("New Order ID:", orderId);
           console.log("first", ordereditems);
           const orderData: any = {
@@ -253,7 +253,7 @@ export default function OrderCard() {
             orderedItem: [],
             orderAmount: finalPrice,
             subtotal: calculateTotal(ordereditems),
-            gstPercentage: table?.tax.gstPercentage || "",
+            gstPercentage: user?.tax.gstPercentage || "",
             gstAmount: "",
             contactNo: "",
             name: "",
@@ -432,11 +432,11 @@ export default function OrderCard() {
               <span>MRP Total</span>
               <span>₹{calculateTotal(ordereditems)}</span>
             </div>
-            {table?.tax?.gstPercentage ? (
+            {user?.tax?.gstPercentage ? (
               <div className="flex justify-between">
                 <span>Taxes</span>
                 <span>
-                  ₹{calculateTax(ordereditems, table?.tax?.gstPercentage)}
+                  ₹{calculateTax(ordereditems, user?.tax?.gstPercentage)}
                 </span>
               </div>
             ) : (
@@ -447,10 +447,10 @@ export default function OrderCard() {
               <span>Total Amount</span>
               {/* <span>₹{calculateTotal() - 100 + 78}</span> */}
               <span>
-                {table.tax.gstPercentage
+                {user?.tax?.gstPercentage
                   ? `₹${
                       calculateTotal(ordereditems) +
-                      calculateTax(ordereditems, table?.tax?.gstPercentage)
+                      calculateTax(ordereditems, user?.tax?.gstPercentage)
                     }`
                   : `₹${calculateTotal(ordereditems)}`}
               </span>
@@ -459,15 +459,15 @@ export default function OrderCard() {
         </CardContent>
       </Card>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between md:w-[430px] md:m-auto">
+      <div className="fixed bottom-0 rounded-t-xl left-0 right-0 bg-white border-t p-4 flex items-center justify-between md:w-[430px] md:m-auto">
         <div className="flex flex-col">
           <div className="flex items-center">
             <span className="text-sm text-muted-foreground">TOTAL</span>
             <span className="text-xl font-semibold ml-3">
-              {table.tax.gstPercentage
+              {user?.tax?.gstPercentage
                 ? `₹${
                     calculateTotal(ordereditems) +
-                    calculateTax(ordereditems, table?.tax?.gstPercentage)
+                    calculateTax(ordereditems, user?.tax?.gstPercentage)
                   }`
                 : `₹${calculateTotal(ordereditems)}`}
             </span>

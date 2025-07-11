@@ -23,19 +23,18 @@ export default function OrderConfirmation() {
     (state: RootState) => state.addToOrderData.finalOrder
   );
   console.log("DATA", finalItem);
-  const table = useSelector((state: RootState) => state.addToOrderData.user);
-  console.log("HERETHEDATA", table);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // Add useEffect to handle auto-close
   React.useEffect(() => {
-    if (finalItem && table?.tag === "hotel") {
+    if (finalItem && user?.tag === "concierge") {
       const timer = setTimeout(() => {
         window.close();
       }, 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [finalItem, table]);
+  }, [finalItem, user]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {

@@ -1,3 +1,4 @@
+/*
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -273,3 +274,175 @@ export default function Login() {
 }
 // http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiNiIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiIn19.Eq-sf6OZdlLUAmZHM3rP0Zxc5J6dFd7KaB3CzKFh8cA&__vercel_draft=1
 // http://localhost:3001/login?token=eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InZpa3VtYXIuYXphZEBnbWFpbC5jb20iLCJ0YWJsZU5vIjoiOCIsInRheCI6eyJnc3RQZXJjZW50YWdlIjoiIn19.DTiaFgsCRkNAV0ln4-ut322jwZM21wMhUE-YK2faCEk
+*/
+
+// NEW TOKEN HANDLING FUNCTIONALITY
+"use client";
+
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { jwtVerify } from "jose";
+import { AppDispatch } from "@/lib/store";
+import { addUser } from "@/lib/features/addToOrderSlice";
+import { setAuth } from "@/lib/features/authSlice";
+import { checkTableAvailability } from "../utils/serverApi";
+import { Progress } from "@/components/ui/progress";
+
+function TokenHandler() {
+  const secretKey = "Vikas@1234";
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [tokenProcessed, setTokenProcessed] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
+  const [isValidTable, setIsValidTable] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState(
+    "Processing authentication token"
+  );
+
+  useEffect(() => {
+    const processToken = async () => {
+      const token = searchParams.get("token");
+
+      // Start progress
+      setProgress(10);
+
+      if (!token) {
+        console.log("No token found in URL");
+        setProgressText("No authentication token found");
+        setProgress(100);
+        setIsLoading(false);
+        setTokenProcessed(true);
+        setHasToken(false);
+        return;
+      }
+
+      try {
+        console.log("Token found, processing...");
+        setProgress(30);
+
+        const key = new TextEncoder().encode(secretKey);
+        setProgress(50);
+
+        const decoded: any = await jwtVerify(token, key, {
+          algorithms: ["HS256"],
+        });
+
+        setProgress(70);
+
+        if (decoded?.payload) {
+          console.log("Token decoded successfully:", decoded.payload);
+          setProgress(80);
+
+          // Check table availability for restaurant tokens
+          if (decoded.payload.tag === "restaurant") {
+            console.log("Checking table availability...");
+            setProgressText("Checking table availability...");
+            const tableAvailable = await checkTableAvailability(
+              decoded.payload.email,
+              decoded.payload.tableNo
+            );
+            console.log("Table availability check result:", tableAvailable);
+            setIsValidTable(tableAvailable);
+
+            if (!tableAvailable) {
+              setHasToken(false);
+              setProgress(100);
+              return;
+            }
+          }
+
+          dispatch(addUser(decoded.payload));
+          dispatch(setAuth({ token: token, user: decoded.payload }));
+          console.log("User data and token saved to Redux");
+          setProgressText("Authentication complete");
+          setHasToken(true);
+          setProgress(100);
+
+          // Navigate to home page after successful processing
+          setTimeout(() => {
+            router.push("/");
+          }, 1000);
+        }
+      } catch (error) {
+        console.log("Invalid or expired token:", error);
+        setProgressText("Invalid or expired token");
+        setHasToken(false);
+        setProgress(100);
+      } finally {
+        setIsLoading(false);
+        setTokenProcessed(true);
+      }
+    };
+
+    processToken();
+  }, [searchParams, dispatch, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-lg font-medium">Loading...</div>
+          <div className="text-sm text-gray-500 mt-2">{progressText}</div>
+          <Progress value={progress} className="w-64 mt-4" />
+        </div>
+      </div>
+    );
+  }
+
+  if (tokenProcessed && !hasToken) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-lg font-medium text-red-600">
+            {!isValidTable ? "Table is occupied" : "Something went wrong"}
+          </div>
+          <div className="text-sm text-gray-500 mt-2">
+            {!isValidTable
+              ? "This table is currently occupied. Please contact staff for assistance."
+              : "Please contact staff"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (tokenProcessed && hasToken) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="text-lg font-medium text-green-600">Success!</div>
+          <div className="text-sm text-gray-500 mt-2">
+            Redirecting to home page...
+          </div>
+          <Progress value={100} className="w-64 mt-4" />
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+export default function Login() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="text-lg font-medium">Loading...</div>
+            <div className="text-sm text-gray-500 mt-2">
+              Initializing authentication
+            </div>
+            <Progress value={50} className="w-64 mt-4" />
+          </div>
+        </div>
+      }
+    >
+      <TokenHandler />
+    </Suspense>
+  );
+}
