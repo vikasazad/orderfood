@@ -316,7 +316,7 @@ export default function OrderCard() {
 
   return (
     <>
-      <div className="bg-white border-b border-muted rounded-bl-3xl p-2 box-shadow-lg">
+      <div className=" border-b border-[#f0f0f0] rounded-bl-3xl p-2 box-shadow-lg">
         <div
           className="ml-2 w-7 h-8 border-2 border-muted rounded-lg box-shadow-lg flex items-center justify-center"
           onClick={() => router.back()}
