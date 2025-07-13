@@ -49,7 +49,7 @@ export const authPhoneOtp = (
         });
       })
       .catch((err) => {
-        console.log(err);
+        console.log("error in authPhoneOtp", err);
         toast.error("Error during OTP request");
         if (err.code === "auth/invalid-phone-number") {
           toast.error("Invalid phone number. Please check the number.");

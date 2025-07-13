@@ -9,6 +9,9 @@ import {
   Pencil,
   Trash2,
   Dot,
+  ChevronRight,
+  Info,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -48,6 +51,36 @@ import {
   sendOrder,
   updateOrdersForAttendant,
 } from "../utils/orderApi";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"; // Custom hook for countdown timer
+import { Icons } from "@/components/ui/icons";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+const useCountdown = (initialCount: number) => {
+  const [count, setCount] = useState(0);
+
+  const startCountdown = () => setCount(initialCount);
+
+  useEffect(() => {
+    if (count > 0) {
+      const timer = setTimeout(() => setCount(count - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [count]);
+
+  return [count, startCountdown] as const;
+};
 
 export default function OrderCard() {
   const router = useRouter();
@@ -68,6 +101,54 @@ export default function OrderCard() {
   const [finalPrice, setfinalPrice] = useState(0);
   const [loadScript, setLoadScript] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [coupon, setCoupon] = useState<{
+    code: string;
+    discount: number;
+  } | null>({
+    code: "PARTYDEAL",
+    discount: 60,
+  });
+  const [couponInput, setCouponInput] = useState("");
+  const [isCouponDrawerOpen, setIsCouponDrawerOpen] = useState(false);
+  const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(false);
+  const [fNumber, setFNumber] = useState("");
+  const [verificationId, setVerificationId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [stage, setStage] = useState<"phone" | "otp">("phone");
+  const [count, startCountdown] = useCountdown(30);
+  const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
+
+  const handleCouponApply = () => {
+    if (couponInput.trim()) {
+      // Mock coupon validation - in real app, this would be an API call
+      const couponCode = couponInput.trim().toUpperCase();
+      let discount = 0;
+
+      // Mock coupon codes
+      switch (couponCode) {
+        case "PARTYDEAL":
+          discount = 60;
+          break;
+        case "SAVE20":
+          discount = 20;
+          break;
+        case "WELCOME50":
+          discount = 50;
+          break;
+        default:
+          discount = 10; // Default discount for any code
+      }
+
+      setCoupon({
+        code: couponCode,
+        discount: discount,
+      });
+      setCouponInput("");
+    }
+    setIsCouponDrawerOpen(false);
+  };
 
   useEffect(() => {
     const total = ordereditems.reduce((total, item) => {
@@ -77,8 +158,9 @@ export default function OrderCard() {
     const digit = Number(user?.tax.gstPercentage) || 0;
     console.log(digit);
     const tax = Math.round((total * digit) / 100);
-    setfinalPrice(total + tax);
-  }, [ordereditems, user]);
+    const discount = coupon?.discount || 0;
+    setfinalPrice(total + tax - discount);
+  }, [ordereditems, user, coupon]);
 
   const removeAfterZero = (item: any, id: any) => {
     if (ordereditems.length === 1) {
@@ -148,8 +230,10 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    setLoadScript(true);
-    createOrder();
+    setPhoneDrawerOpen(true);
+
+    // setLoadScript(true);
+    // createOrder();
     // router.push("/Detail");
   };
 
@@ -314,8 +398,90 @@ export default function OrderCard() {
     payment.open();
   };
 
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    setIsLoading(true);
+    e.preventDefault();
+
+    try {
+      const formattedNumber = `+${91}${phoneNumber}`;
+      console.log("Formatted phone number:", formattedNumber);
+      console.log("Sending OTPs to email and phone...");
+      setFNumber(formattedNumber);
+      const phoneOtpRes: any = await authPhoneOtp(formattedNumber);
+      console.log("phoneOtpRes:", phoneOtpRes);
+      setVerificationId(phoneOtpRes.verificationId);
+      setStage("otp");
+      startCountdown(); // Start countdown here
+
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Something went wrong");
+      console.error("Error in handleRegisterSubmit:", error);
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    setIsLoading(true); // Add loading state
+
+    try {
+      console.log("Verifying phone OTP...");
+      const phoneVerified = await verifyOtp(verificationId, otp);
+      console.log("phoneVerified:", phoneVerified);
+
+      if (!phoneVerified) {
+        toast.error("Invalid phone OTP");
+        console.log("Invalid phone OTP");
+        setIsLoading(false);
+        return;
+      }
+
+      // Set state and show toast before navigation
+      toast.success("Verification successful!");
+      console.log("User verification successful!");
+      setPhoneDrawerOpen(false);
+      setStage("phone");
+      setOtp("");
+      setPhoneNumber("");
+      setFNumber("");
+      setIsLoading(false);
+      setLoadScript(true);
+      createOrder();
+      // Use replace to prevent back navigation to login
+      // document.body.focus();
+      // router.push("/");
+    } catch (error) {
+      toast.error("Verification failed");
+      console.error("Error in handleOtpSubmit:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      console.log("Resending OTPs...");
+      const phoneOtpRes: any = await resendOtp(fNumber);
+      console.log("phoneOtpRes:", phoneOtpRes);
+
+      if (phoneOtpRes) {
+        setVerificationId(phoneOtpRes.verificationId);
+        startCountdown(); // Restart countdown
+        toast.success("OTPs resent successfully");
+        console.log(
+          "OTPs resent successfully. Verification ID:",
+          phoneOtpRes.verificationId
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to resend OTPs");
+      console.error("Error in handleResendOtp:", error);
+    }
+  };
+
   return (
     <>
+      <div id="recaptcha-container" />
       <div className=" border-b border-[#f0f0f0] rounded-bl-3xl p-2 box-shadow-lg">
         <div
           className="ml-2 w-7 h-8 border-2 border-muted rounded-lg box-shadow-lg flex items-center justify-center"
@@ -323,14 +489,6 @@ export default function OrderCard() {
         >
           <ChevronLeft className="h-6 w-6 " strokeWidth={3} />
         </div>
-
-        {/* <Button
-          variant="ghost"
-          className="h-15 w-15 mb-4 bg-white"
-          onClick={() => router.back()}
-        >
-          <ChevronLeft className="h-10 w-10" />
-        </Button> */}
       </div>
       <div className="w-full max-w-md mx-auto p-4">
         {isPending && (
@@ -350,10 +508,10 @@ export default function OrderCard() {
           />
         )}
 
-        <Card className="relative">
+        <Card className="relative rounded-3xl">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">Order</h1>
+              <h1 className="text-md font-bold">Order</h1>
 
               <HandPlatter className="h-6 w-6" />
             </div>
@@ -382,7 +540,7 @@ export default function OrderCard() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-medium">{item.item.name}</h3>
+                    <h3 className="font-medium text-sm">{item.item.name}</h3>
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-muted-foreground">
                         {item.selectedType}
@@ -511,6 +669,7 @@ export default function OrderCard() {
                 onOpenChange={setIsSpecialRequestsOpen}
               >
                 <DrawerContent className="h-auto max-h-[80vh] p-0 bg-slate-50">
+                  <DrawerDescription></DrawerDescription>
                   <div className="flex flex-col h-full">
                     <DrawerHeader className="px-3 py-0 ">
                       <div className="flex items-center justify-between">
@@ -585,7 +744,7 @@ export default function OrderCard() {
 
               <div className="flex justify-between font-medium pt-2 border-t">
                 <span>Total Amount</span>
-                <span>₹{calculateTotal() - 100 + 78}</span>
+                <span>₹{calculateTotal(ordereditems)}</span>
                 <span>
                   {user?.tax?.gstPercentage
                     ? `₹${
@@ -599,34 +758,309 @@ export default function OrderCard() {
           </CardContent>
         </Card>
 
-        <div className="fixed bottom-0 rounded-t-xl left-0 right-0 bg-white border-t px-4 py-2 flex items-center justify-between md:w-[430px] md:m-auto">
-          <div className="flex flex-col">
-            <div className="flex items-center">
-              <span className="text-sm text-muted-foreground">TOTAL</span>
-              <span className="text-xl font-semibold ml-3">
-                {user?.tax?.gstPercentage
-                  ? `₹${
-                      calculateTotal(ordereditems) +
-                      calculateTax(ordereditems, user?.tax?.gstPercentage)
-                    }`
-                  : `₹${calculateTotal(ordereditems)}`}
-              </span>
+        <Card className="mt-4 rounded-3xl mb-12">
+          <CardHeader className="p-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-md font-bold">Payment Details</h1>
+
+              <ChevronRight
+                className="self-right h-4 w-4 cursor-pointer"
+                strokeWidth={3}
+                onClick={() => setIsPaymentDetailsOpen(true)}
+              />
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="pt-2 pb-4 px-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between w-full">
+                <p className="text-xs font-semibold">To Pay</p>
+                <p className="text-xs">₹ {finalPrice}</p>
+                {/* I can minus the discount amount here */}
+              </div>
+              <div className="flex items-center justify-between w-full">
+                <p className="text-xs font-semibold">
+                  Total savings with discount
+                </p>
+                <p className="text-xs text-green-500 font-medium">
+                  -₹{coupon?.discount || 0}
+                </p>
+              </div>
+              {coupon ? (
+                <div className="h-5 flex items-center justify-between w-full px-2 py-0 rounded-xl bg-pink-200/50 ">
+                  <div className="text-xs ">
+                    You saved {""}
+                    <span className="text-green-500 text-md font-semibold">
+                      ₹{coupon.discount}
+                    </span>{" "}
+                    with{" "}
+                    <span className="text-blue-500 text-md font-semibold">
+                      {coupon.code}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="p-0 text-xs text-blue-500 underline"
+                    onClick={() => setCoupon(null)}
+                  >
+                    remove
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="text-xs text-muted-foreground"
+                  onClick={() => setIsCouponDrawerOpen(true)}
+                >
+                  Apply Coupon
+                </div>
+              )}
+
+              <Drawer
+                open={isCouponDrawerOpen}
+                onOpenChange={setIsCouponDrawerOpen}
+              >
+                <DrawerContent className="rounded-t-2xl">
+                  <DrawerDescription></DrawerDescription>
+                  <DrawerHeader className="text-left">
+                    <DrawerTitle className="text-sm font-semibold">
+                      Add Coupon for extra savings
+                    </DrawerTitle>
+                  </DrawerHeader>
+
+                  <div className="px-4">
+                    <Input
+                      placeholder="Enter code"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      className="rounded-lg mb-2"
+                    />
+                  </div>
+                  <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
+                    <Button className="flex-1" onClick={handleCouponApply}>
+                      Apply
+                    </Button>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+
+              <Drawer
+                open={isPaymentDetailsOpen}
+                onOpenChange={setIsPaymentDetailsOpen}
+              >
+                <DrawerContent className="rounded-t-2xl bg-[#f0f0f0]">
+                  <DrawerDescription></DrawerDescription>
+                  <DrawerHeader className="text-left pb-2 pt-1">
+                    <DrawerTitle className="text-sm font-semibold">
+                      Payment Details
+                    </DrawerTitle>
+                  </DrawerHeader>
+
+                  <div className="mx-3 px-4 pb-4 py-3 space-y-4 bg-white rounded-2xl">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-light">
+                        Item amount({ordereditems.length})
+                      </span>
+                      <span className="text-xs font-semibold">
+                        ₹ {calculateTotal(ordereditems)}
+                      </span>
+                    </div>
+
+                    {coupon && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-green-600">
+                          Savings with {coupon.code}
+                        </span>
+                        <span className="text-xs text-green-600">
+                          - ₹{coupon.discount}
+                        </span>
+                      </div>
+                    )}
+
+                    {coupon && (
+                      <div className="flex justify-between items-center bg-pink-50 p-2 rounded-lg">
+                        <span className="text-xs">{coupon.code} Applied</span>
+                        <Trash2
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCoupon(null)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center font-medium">
+                      <span className="text-xs">Sub Total</span>
+                      <span className="text-xs">
+                        ₹
+                        {calculateTotal(ordereditems) - (coupon?.discount || 0)}
+                      </span>
+                    </div>
+                    <Popover>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs">Taxes and charges</span>
+                          <PopoverTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </PopoverTrigger>
+                        </div>
+                        <span className="text-sm">
+                          ₹
+                          {user?.tax?.gstPercentage
+                            ? calculateTax(
+                                ordereditems,
+                                user?.tax?.gstPercentage
+                              )
+                            : 0}
+                        </span>
+                      </div>
+
+                      <PopoverContent
+                        className="w-60 p-0 bg-purple-50 rounded-xl"
+                        side="bottom"
+                        align="center"
+                      >
+                        <div className="px-6 py-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs">Taxes</span>
+                            <span className="text-xs flex items-center gap-1">
+                              <IndianRupee
+                                className="h-3 w-3"
+                                strokeWidth={3}
+                              />
+                              {user?.tax?.gstPercentage
+                                ? calculateTax(
+                                    ordereditems,
+                                    user?.tax?.gstPercentage
+                                  )
+                                : 0}
+                            </span>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Separator />
+
+                    <div className="flex justify-between items-center font-semibold text-xs">
+                      <span>To Pay</span>
+                      <span>₹{finalPrice}</span>
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between fixed bottom-0 rounded-t-2xl left-0 right-0 bg-white border-t px-4 py-2  ">
+          {/* <div className="flex items-center">
+            <span className="text-sm text-muted-foreground">TOTAL</span>
+            <span className="text-xl font-semibold ml-3">
+              {user?.tax?.gstPercentage
+                ? `₹${
+                    calculateTotal(ordereditems) +
+                    calculateTax(ordereditems, user?.tax?.gstPercentage) -
+                    (coupon?.discount || 0)
+                  }`
+                : `₹${calculateTotal(ordereditems) - (coupon?.discount || 0)}`}
+            </span>
+          </div> */}
+
           <Button
-            className="flex-1 ml-4  font-semibold py-3"
+            className="w-full font-semibold py-6 rounded-xl"
             onClick={() => handlePlaceOrder()}
           >
-            PLACE ORDER
+            Pay
+            {user?.tax?.gstPercentage ? (
+              <span className="flex items-center text-sm">
+                <IndianRupee className="h-2 w-2" strokeWidth={3} />
+                {calculateTotal(ordereditems) +
+                  calculateTax(ordereditems, user?.tax?.gstPercentage) -
+                  (coupon?.discount || 0)}
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <IndianRupee className="h-2 w-2" strokeWidth={3} />
+                {calculateTotal(ordereditems) - (coupon?.discount || 0)}
+              </span>
+            )}
           </Button>
         </div>
       </div>
+      <Drawer open={phoneDrawerOpen} onOpenChange={setPhoneDrawerOpen}>
+        <DrawerContent className=" p-0 bg-slate-50">
+          <DrawerDescription></DrawerDescription>
+          <DrawerHeader className="px-3 py-0 ">
+            <DrawerTitle className="text-md font-semibold">
+              {stage === "phone" ? "Enter your phone number" : "Enter  OTP"}
+            </DrawerTitle>
+          </DrawerHeader>
+
+          <div className="space-y-4 px-4 py-2">
+            {stage === "phone" && (
+              <Input
+                placeholder="Enter your phone number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                autoFocus
+              />
+            )}
+            {stage === "otp" && (
+              <>
+                <div className="flex items-center justify-center py-2">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
+                    onComplete={handleOtpSubmit}
+                    autoFocus
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <div className="text-right text-sm text-gray-500">
+                  {count > 0 ? (
+                    `Resend OTP in ${count}s`
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="text-sm text-blue-500"
+                      onClick={handleResendOtp}
+                    >
+                      Resend OTP
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <DrawerFooter className="px-3 py-2  bg-background rounded-2xl">
+            <Button
+              className="flex-1 py-3 rounded-2xl"
+              onClick={stage === "phone" ? handlePhoneSubmit : handleOtpSubmit}
+            >
+              {stage === "phone" ? "Continue" : "Verify"}
+              {isLoading && (
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
 
-{
-  /* <Drawer open={isSpecialRequestsOpen} onOpenChange={setIsSpecialRequestsOpen}>
+// {
+/* <Drawer open={isSpecialRequestsOpen} onOpenChange={setIsSpecialRequestsOpen}>
   <DrawerContent className="h-auto max-h-[80vh] p-0">
     <div className="flex flex-col h-full">
       <DrawerHeader className="px-6 py-4 border-b">
@@ -688,4 +1122,4 @@ export default function OrderCard() {
     </div>
   </DrawerContent>
 </Drawer>; */
-}
+// }

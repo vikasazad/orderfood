@@ -113,3 +113,12 @@ main {
     @apply bg-background text-foreground;
   }
 } */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
