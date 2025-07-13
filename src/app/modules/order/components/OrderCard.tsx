@@ -985,7 +985,7 @@ export default function OrderCard() {
         </div>
       </div>
       <Drawer open={phoneDrawerOpen} onOpenChange={setPhoneDrawerOpen}>
-        <DrawerContent className=" p-0 bg-slate-50">
+        <DrawerContent className="p-4 bg-slate-50">
           <DrawerDescription></DrawerDescription>
           <DrawerHeader className="px-3 py-0 ">
             <DrawerTitle className="text-md font-semibold">
@@ -993,7 +993,7 @@ export default function OrderCard() {
             </DrawerTitle>
           </DrawerHeader>
 
-          <div className="space-y-4 px-4 py-2">
+          <div className="space-y-4 p-4 text-lg">
             {stage === "phone" && (
               <Input
                 placeholder="Enter your phone number"
