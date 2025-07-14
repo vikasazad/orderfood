@@ -985,15 +985,15 @@ export default function OrderCard() {
         </div>
       </div>
       <Drawer open={phoneDrawerOpen} onOpenChange={setPhoneDrawerOpen}>
-        <DrawerContent className="p-4 bg-slate-50">
+        <DrawerContent className="p-2 bg-slate-50 w-[90vw] h-[200px] min-h-[200px] max-h-[400px] flex flex-col rounded-t-3xl">
           <DrawerDescription></DrawerDescription>
-          <DrawerHeader className="px-3 py-0 ">
+          <DrawerHeader className="px-3 py-0 flex-shrink-0">
             <DrawerTitle className="text-md font-semibold">
               {stage === "phone" ? "Enter your phone number" : "Enter  OTP"}
             </DrawerTitle>
           </DrawerHeader>
 
-          <div className="space-y-4 p-4 text-lg">
+          <div className="space-y-4 px-3 py-2 text-lgx flex-1 flex flex-col justify-center">
             {stage === "phone" && (
               <Input
                 placeholder="Enter your phone number"
@@ -1003,8 +1003,8 @@ export default function OrderCard() {
               />
             )}
             {stage === "otp" && (
-              <>
-                <div className="flex items-center justify-center py-2">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-center ">
                   <InputOTP
                     maxLength={6}
                     value={otp}
@@ -1031,18 +1031,18 @@ export default function OrderCard() {
                   ) : (
                     <Button
                       variant="ghost"
-                      className="text-sm text-blue-500"
+                      className="h-6 text-sm text-blue-500 py-0"
                       onClick={handleResendOtp}
                     >
                       Resend OTP
                     </Button>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
 
-          <DrawerFooter className="px-3 py-2  bg-background rounded-2xl">
+          <DrawerFooter className="px-3 py-2 bg-background rounded-2xl flex-shrink-0">
             <Button
               className="flex-1 py-3 rounded-2xl"
               onClick={stage === "phone" ? handlePhoneSubmit : handleOtpSubmit}
