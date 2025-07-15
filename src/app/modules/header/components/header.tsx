@@ -62,6 +62,7 @@ export default function Header({ data }: { data: any }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    console.log("h0");
     if (!user?.email || !user?.phone) {
       console.log("Email or phone is missing in table data.");
       return;
@@ -84,13 +85,17 @@ export default function Header({ data }: { data: any }) {
         if (unsubscribe) unsubscribe(); // Ensure cleanup
       };
     } else {
+      console.log("h1");
       if (user.email && user.phone) {
+        console.log("h2");
         const unsubscribe = getOrderData(
           user.email,
-          user.phone,
+          user?.phone,
+
           (result: any) => {
             if (result) {
               setOrderData(result);
+              console.log("result", result);
             } else {
               setOrderData([]);
             }
@@ -236,7 +241,7 @@ export default function Header({ data }: { data: any }) {
     );
   };
 
-  console.log("orderDAta", orderData);
+  console.log("orderDAta", orderData[0]?.diningDetails?.orders.length);
 
   return (
     <>
@@ -247,7 +252,7 @@ export default function Header({ data }: { data: any }) {
         />
       )}
       <header className="mx-auto max-w-2xl px-2">
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between py-2 ">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Menu className="h-5 w-5" />
@@ -255,7 +260,7 @@ export default function Header({ data }: { data: any }) {
 
             <SheetContent
               side="left"
-              className="w-[350px] sm:w-[350px] flex flex-col overflow-y-auto"
+              className="w-[350px] sm:w-[350px] flex flex-col overflow-y-auto "
             >
               <SheetHeader className=" space-y-0 ">
                 <SheetTitle className="text-xl">
@@ -272,7 +277,7 @@ export default function Header({ data }: { data: any }) {
                 </SheetTitle>
               </SheetHeader>
 
-              {orderData[0]?.diningDetails.length > 0 ? (
+              {orderData[0]?.diningDetails?.orders.length > 0 ? (
                 <>
                   <div className="text-lg">Order Summary:</div>
                   {orderData[0]?.diningDetails?.orders.map(
@@ -304,7 +309,7 @@ export default function Header({ data }: { data: any }) {
                                   Estimated Delivery:
                                 </span>
                                 <span className="font-medium">
-                                  20-30 minutes
+                                  20-25 minutes
                                 </span>
                               </div>
                               <div className="flex justify-between text-sm">
@@ -312,7 +317,7 @@ export default function Header({ data }: { data: any }) {
                                   Table:
                                 </span>
                                 <span className="font-medium text-right">
-                                  {orderData[0].diningDetails.location}
+                                  {`T-${orderData[0].diningDetails.location}`}
                                 </span>
                               </div>
                             </div>

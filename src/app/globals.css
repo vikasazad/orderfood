@@ -50,6 +50,52 @@ main {
     border-radius: 0;
   }
 }
+
+/* iOS specific fixes to prevent zoom on input focus */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Ensure consistent behavior across platforms */
+input:focus,
+textarea:focus,
+select:focus {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  outline: none;
+}
+
+/* Prevent zoom on iOS while maintaining accessibility */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    transform: scale(1);
+    transition: transform 0.1s ease;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

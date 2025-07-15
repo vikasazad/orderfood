@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { RootState } from "@/lib/store";
+// import { RootState } from "@/lib/store";
 import Header from "../../header/components/header";
 import { getRestaurantData } from "../utils/mainRestaurantApi";
 import Category from "./category";
@@ -12,15 +12,15 @@ import Footer from "../../footer/components/footer";
 
 const Main = () => {
   const router = useRouter();
-  const { isAuthenticated, token } = useSelector(
-    (state: RootState) => state.auth
-  );
+  // const { isAuthenticated, token } = useSelector(
+  //   (state: RootState) => state.auth
+  // );
   const [data, setData] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
     // Check if user is authenticated
-    if (!isAuthenticated || !token) {
+    if (!localStorage.getItem("token")) {
       console.log("No authentication token found, redirecting to login");
       router.push("/login");
       return;
@@ -39,16 +39,16 @@ const Main = () => {
     };
 
     fetchData();
-  }, [isAuthenticated, token, router]);
+  }, [router]);
 
   // Show loading while checking authentication or fetching data
-  if (!isAuthenticated || !token || isLoading) {
+  if (!localStorage.getItem("token") || isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="text-lg font-medium">Loading...</div>
           <div className="text-sm text-gray-500 mt-2">
-            {!isAuthenticated || !token
+            {!localStorage.getItem("token")
               ? "Checking authentication..."
               : "Loading menu..."}
           </div>

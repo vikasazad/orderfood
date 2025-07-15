@@ -40,7 +40,6 @@ import {
 } from "@/lib/features/addToOrderSlice";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { sendNotification } from "@/lib/sendNotification";
 import {
   addKitchenOrder,
   calculateTax,
@@ -49,7 +48,8 @@ import {
   removeTableByNumber,
   sendHotelOrder,
   sendOrder,
-  updateOrdersForAttendant,
+  sendStaffAssignmentRequest,
+  sendWhatsAppMessage,
 } from "../utils/orderApi";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -236,6 +236,7 @@ export default function OrderCard() {
     // createOrder();
     // router.push("/Detail");
   };
+  console.log("user", user?.phone);
 
   const createOrder = async () => {
     const res = await fetch("/api/createOrder", {
@@ -255,7 +256,7 @@ export default function OrderCard() {
       image: "",
       prefill: {
         name: user?.phone,
-        contact: user?.phone,
+        contact: localStorage.getItem("phone") || "",
       },
       notes: {
         address: "Razorpay Corporate Office",
@@ -289,7 +290,7 @@ export default function OrderCard() {
               gstAmount: user?.tax.gstPercentage
                 ? calculateTax(ordereditems, user?.tax.gstPercentage)
                 : "",
-              contactNo: user?.phone,
+              contactNo: localStorage.getItem("phone") || "",
               name: "",
               email: "",
               problemFood: "",
@@ -304,7 +305,11 @@ export default function OrderCard() {
               estimatedDeliveryTime: "",
               deliveryAddress: "",
               specialrequirements: specialRequirements,
+              discountCode: coupon?.code || "",
+              discountAmount: coupon?.discount || 0,
+              discountType: "price",
             };
+            console.log("orderData", orderData);
 
             ordereditems.map((er: any) => {
               return orderData.orderedItem.push(createOrderData(er));
@@ -332,24 +337,41 @@ export default function OrderCard() {
               await addKitchenOrder(
                 user?.email,
                 generateOrderId("RES", user?.tableNo),
-                user?.name,
+                user?.name || "Guest",
                 ordereditems.map((er: any) => {
                   return createOrderData(er);
                 }),
                 finalPrice
               );
+              if (localStorage.getItem("phone")) {
+                console.log("user?.phone", localStorage.getItem("phone"));
+                await sendWhatsAppMessage(localStorage.getItem("phone") || "", [
+                  orderId,
+                  `T-${user?.tableNo}`,
+                  "Wah Bhai Wah",
+                ]);
+              }
+
+              await sendStaffAssignmentRequest(
+                attendant?.name,
+                attendant?.contact,
+                orderId,
+                user?.name || "Guest",
+                user?.tableNo,
+                "table"
+              );
             }
 
-            await updateOrdersForAttendant(attendant?.name, orderId);
+            // await updateOrdersForAttendant(attendant?.name, orderId);
             if (user?.tag === "restaurant") {
               await removeTableByNumber(user?.email, user?.tableNo);
             }
 
-            await sendNotification(
-              token,
-              "New Order Received",
-              "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
-            );
+            // await sendNotification(
+            //   token,
+            //   "New Order Received",
+            //   "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
+            // );
 
             router.push("/orderConfirmation");
           });
@@ -439,6 +461,9 @@ export default function OrderCard() {
       // Set state and show toast before navigation
       toast.success("Verification successful!");
       console.log("User verification successful!");
+      localStorage.setItem("phone", fNumber);
+      // const newUser = { ...user, phone: fNumber };
+      // dispatch(setUser(newUser));
       setPhoneDrawerOpen(false);
       setStage("phone");
       setOtp("");
@@ -985,21 +1010,21 @@ export default function OrderCard() {
         </div>
       </div>
       <Drawer open={phoneDrawerOpen} onOpenChange={setPhoneDrawerOpen}>
-        <DrawerContent className="p-2 bg-slate-50 w-[90vw] h-[200px] min-h-[200px] max-h-[400px] flex flex-col rounded-t-3xl">
+        <DrawerContent className="rounded-t-3xl">
           <DrawerDescription></DrawerDescription>
-          <DrawerHeader className="px-3 py-0 flex-shrink-0">
-            <DrawerTitle className="text-md font-semibold">
-              {stage === "phone" ? "Enter your phone number" : "Enter  OTP"}
-            </DrawerTitle>
+
+          <DrawerHeader>
+            <DrawerTitle></DrawerTitle>
+            {stage === "phone" ? "Enter your phone number" : "Enter  OTP"}
           </DrawerHeader>
 
-          <div className="space-y-4 px-3 py-2 text-lgx flex-1 flex flex-col justify-center">
+          <div className="space-y-4 px-3 py-2">
             {stage === "phone" && (
               <Input
                 placeholder="Enter your phone number"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                autoFocus
+                className="rounded-xl "
               />
             )}
             {stage === "otp" && (
@@ -1042,7 +1067,7 @@ export default function OrderCard() {
             )}
           </div>
 
-          <DrawerFooter className="px-3 py-2 bg-background rounded-2xl flex-shrink-0">
+          <DrawerFooter className="px-3 py-2 bg-background rounded-2xl ">
             <Button
               className="flex-1 py-3 rounded-2xl"
               onClick={stage === "phone" ? handlePhoneSubmit : handleOtpSubmit}

@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { MoveRight, Utensils } from "lucide-react";
+import { IndianRupee, MoveRight, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -99,8 +99,9 @@ export default function Footer({ data }: { data: any }) {
               </Button>
             </Link>
           </div>
-          <div className="text-sm text-center mt-1 text-white/90">
-            Add items worth ₹100 to unlock a free discount
+          <div className="flex items-center justify-center text-sm text-center mt-1 text-white/90">
+            Add items worth <IndianRupee className="w-4 h-4" />
+            100 to unlock a free discount
           </div>
         </div>
       )}

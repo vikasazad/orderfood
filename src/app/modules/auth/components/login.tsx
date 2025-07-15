@@ -357,6 +357,7 @@ function TokenHandler() {
 
           dispatch(addUser(decoded.payload));
           dispatch(setAuth({ token: token, user: decoded.payload }));
+          localStorage.setItem("token", token);
           console.log("User data and token saved to Redux");
           setProgressText("Authentication complete");
           setHasToken(true);

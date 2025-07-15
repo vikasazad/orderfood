@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import store, { AppStore } from "../lib/store";
 import { DM_Sans } from "next/font/google";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import GlobalNotificationProvider from "@/hooks/useFcmToken";
 
@@ -22,6 +22,23 @@ export default function RootLayout({
   if (!storeRef.current) {
     storeRef.current = store();
   }
+
+  // Add viewport meta tag to prevent iOS zoom on input focus
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      viewport.setAttribute(
+        "content",
+        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+      );
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content =
+        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0";
+      document.head.appendChild(meta);
+    }
+  }, []);
 
   return (
     <html lang="en" className={dmSans.className}>

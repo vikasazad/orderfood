@@ -1,23 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Copy, MapPin, Receipt } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
-import { clearCart } from "@/lib/features/addToOrderSlice";
 import React from "react";
 
 export default function OrderConfirmation() {
-  const dispatch = useDispatch();
   const router = useRouter();
   const finalItem = useSelector(
     (state: RootState) => state.addToOrderData.finalOrder
@@ -33,104 +24,129 @@ export default function OrderConfirmation() {
       }, 5000);
 
       return () => clearTimeout(timer);
+    } else {
+      router.push("/");
+      toast.success("Order Placed Successfully!");
     }
   }, [finalItem, user]);
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success(`${label} copied to clipboard`);
-    });
-  };
+  // const copyToClipboard = (text: string, label: string) => {
+  //   navigator.clipboard.writeText(text).then(() => {
+  //     toast.success(`${label} copied to clipboard`);
+  //   });
+  // };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center space-y-2">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="flex justify-center"
-        >
-          <CheckCircle2
-            className="w-16 h-16 text-green-500"
-            strokeWidth={1.5}
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h2 className="text-2xl font-semibold text-green-600">
-            Order Placed Successfully!
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Thank you for your order. Your food is being prepared.
-          </p>
-        </motion.div>
-      </CardHeader>
+    <div className="flex flex-col items-center justify-center h-screen p-4">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        className="flex justify-center"
+      >
+        <CheckCircle2 className="w-16 h-16 text-green-500" strokeWidth={1.5} />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-center text-2xl font-semibold text-green-600">
+          Order Placed Successfully!
+        </h2>
+        <p className="text-muted-foreground mt-1 text-center">
+          Thank you for your order. Your food is being prepared.
+        </p>
+      </motion.div>
 
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Order Number</p>
-            <div className="flex items-center gap-2">
-              <p className="font-mono font-medium">{finalItem.orderId}</p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() =>
-                  copyToClipboard(finalItem.orderId, "Order number")
-                }
-              >
-                <Copy className="h-4 w-4" />
-                <span className="sr-only">Copy order number</span>
-              </Button>
+      {/* <Card className="w-full max-w-md mx-auto mt-4">
+        <CardHeader className="text-center space-y-2">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="flex justify-center"
+          >
+            <CheckCircle2
+              className="w-16 h-16 text-green-500"
+              strokeWidth={1.5}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-semibold text-green-600">
+              Order Placed Successfully!
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              Thank you for your order. Your food is being prepared.
+            </p>
+          </motion.div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Order Number</p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono font-medium">{finalItem.orderId}</p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() =>
+                    copyToClipboard(finalItem.orderId, "Order number")
+                  }
+                >
+                  <Copy className="h-4 w-4" />
+                  <span className="sr-only">Copy order number</span>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Payment ID</p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono font-medium truncate">
+                  {finalItem.razorpayPaymentId}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={() =>
+                    copyToClipboard(finalItem.razorpayPaymentId, "Payment ID")
+                  }
+                >
+                  <Copy className="h-4 w-4" />
+                  <span className="sr-only">Copy payment ID</span>
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Payment ID</p>
-            <div className="flex items-center gap-2">
-              <p className="font-mono font-medium truncate">
-                {finalItem.razorpayPaymentId}
-              </p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 flex-shrink-0"
-                onClick={() =>
-                  copyToClipboard(finalItem.razorpayPaymentId, "Payment ID")
-                }
-              >
-                <Copy className="h-4 w-4" />
-                <span className="sr-only">Copy payment ID</span>
-              </Button>
-            </div>
-          </div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
-            <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium">Estimated Delivery Time</p>
-              <p className="text-sm text-muted-foreground">25-30 minutes</p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
+              <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Estimated Delivery Time</p>
+                <p className="text-sm text-muted-foreground">25-30 minutes</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
+              <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Table</p>
+                <p className="text-sm text-muted-foreground">
+                  {finalItem.tableNo}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 bg-muted/50 p-3 rounded-lg">
-            <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium">Table</p>
-              <p className="text-sm text-muted-foreground">
-                {finalItem.tableNo}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div>
+          <div>
           <div className="flex items-center gap-2 mb-4">
             <Receipt className="w-5 h-5" />
             <h3 className="font-semibold">Order Summary</h3>
@@ -172,9 +188,9 @@ export default function OrderConfirmation() {
             </div>
           </div>
         </div>
-      </CardContent>
+        </CardContent>
 
-      <CardFooter className="flex gap-3">
+        <CardFooter className="flex gap-3">
         <Button
           variant="outline"
           className="w-full"
@@ -195,6 +211,7 @@ export default function OrderConfirmation() {
           Return to Menu
         </Button>
       </CardFooter>
-    </Card>
+      </Card> */}
+    </div>
   );
 }

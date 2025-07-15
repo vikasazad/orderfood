@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
-import { ShoppingBag } from "lucide-react";
+import { IndianRupee, ShoppingBag } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,8 +132,9 @@ export default function Component({ data = [] }: { data?: any[] }) {
                             <span className="text-xs">{item.cuisineName}</span>
                           </div>
                         </div>
-                        <div className="text-xl font-medium">
-                          ₹{getPrice(item, selectedPortion)}
+                        <div className="flex items-center  text-xl font-medium">
+                          <IndianRupee className="w-4 h-4" />
+                          {getPrice(item, selectedPortion)}
                         </div>
                       </div>
 
