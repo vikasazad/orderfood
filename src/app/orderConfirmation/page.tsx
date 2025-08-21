@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import React from "react";
+import { clearCart } from "@/lib/features/addToOrderSlice";
 
 export default function OrderConfirmation() {
   const router = useRouter();
@@ -14,8 +15,8 @@ export default function OrderConfirmation() {
     (state: RootState) => state.addToOrderData.finalOrder
   );
   console.log("DATA", finalItem);
-  const { user } = useSelector((state: RootState) => state.auth);
-
+  const { user } = useSelector((state: RootState) => state.addToOrderData);
+  const dispatch = useDispatch();
   // Add useEffect to handle auto-close
   React.useEffect(() => {
     if (finalItem && user?.tag === "concierge") {
@@ -26,6 +27,7 @@ export default function OrderConfirmation() {
       return () => clearTimeout(timer);
     } else {
       router.push("/");
+      dispatch(clearCart());
       toast.success("Order Placed Successfully!");
     }
   }, [finalItem, user]);

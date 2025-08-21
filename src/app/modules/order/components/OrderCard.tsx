@@ -44,6 +44,7 @@ import {
   addKitchenOrder,
   calculateTax,
   calculateTotal,
+  findCoupon,
   getOnlineStaffFromFirestore,
   removeTableByNumber,
   sendHotelOrder,
@@ -85,12 +86,12 @@ const useCountdown = (initialCount: number) => {
 export default function OrderCard() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.addToOrderData);
 
   const ordereditems = useSelector(
     (state: RootState) => state.addToOrderData.addToOrderData
   );
-  console.log("ordereditems", ordereditems);
+  // console.log("ordereditems", ordereditems);
   const token = useSelector((state: RootState) => state.addToOrderData.token);
 
   const [selectedPortion, setSelectedPortion] = useState("");
@@ -104,12 +105,12 @@ export default function OrderCard() {
   const [coupon, setCoupon] = useState<{
     code: string;
     discount: number;
-  } | null>({
-    code: "PARTYDEAL",
-    discount: 60,
-  });
+    type: string;
+    name: string;
+  } | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [isCouponDrawerOpen, setIsCouponDrawerOpen] = useState(false);
+  const [discount, setDiscount] = useState(0);
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(false);
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
@@ -120,46 +121,44 @@ export default function OrderCard() {
   const [count, startCountdown] = useCountdown(30);
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
 
-  const handleCouponApply = () => {
+  const handleCouponApply = async () => {
     if (couponInput.trim()) {
       // Mock coupon validation - in real app, this would be an API call
       const couponCode = couponInput.trim().toUpperCase();
-      let discount = 0;
-
-      // Mock coupon codes
-      switch (couponCode) {
-        case "PARTYDEAL":
-          discount = 60;
-          break;
-        case "SAVE20":
-          discount = 20;
-          break;
-        case "WELCOME50":
-          discount = 50;
-          break;
-        default:
-          discount = 10; // Default discount for any code
+      const couponResult = await findCoupon(couponCode);
+      // console.log("couponResult", couponResult);
+      if (couponResult) {
+        setCoupon(couponResult);
+        const total = ordereditems.reduce((total, item) => {
+          const price = item.item.price[item.selectedType];
+          return total + price * item.count;
+        }, 0);
+        // console.log("total", total);
+        if (couponResult.type === "percentage") {
+          setDiscount(total * (couponResult.amount.replace("%", "") / 100));
+        } else {
+          setDiscount(couponResult.discount);
+        }
+        setCouponInput("");
+      } else {
+        toast.error("Invalid coupon code");
       }
-
-      setCoupon({
-        code: couponCode,
-        discount: discount,
-      });
-      setCouponInput("");
     }
     setIsCouponDrawerOpen(false);
   };
-
+  // console.log("discount", discount);
   useEffect(() => {
-    const total = ordereditems.reduce((total, item) => {
-      const price = item.item.price[item.selectedType];
-      return total + price * item.count;
-    }, 0);
+    const total =
+      ordereditems.reduce((total, item) => {
+        const price = item.item.price[item.selectedType];
+        return total + price * item.count;
+      }, 0) - discount;
+    // console.log("total", total);
     const digit = Number(user?.tax.gstPercentage) || 0;
-    console.log(digit);
+    // console.log(digit);
     const tax = Math.round((total * digit) / 100);
-    const discount = coupon?.discount || 0;
-    setfinalPrice(total + tax - discount);
+
+    setfinalPrice(total + tax);
   }, [ordereditems, user, coupon]);
 
   const removeAfterZero = (item: any, id: any) => {
@@ -211,7 +210,7 @@ export default function OrderCard() {
     setTempSpecialRequirements("");
     setSpecialRequirements("");
   };
-  console.log(finalPrice);
+  // console.log(finalPrice);
   function generateOrderId(restaurantCode: string, tableNo: string) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     const orderId = `${restaurantCode}:T-${tableNo}:${randomNumber}`;
@@ -236,7 +235,7 @@ export default function OrderCard() {
     // createOrder();
     // router.push("/Detail");
   };
-  console.log("user", user?.phone);
+  // console.log("user", user?.phone);
 
   const createOrder = async () => {
     const res = await fetch("/api/createOrder", {
@@ -288,7 +287,11 @@ export default function OrderCard() {
               subtotal: calculateTotal(ordereditems),
               gstPercentage: user?.tax.gstPercentage || "",
               gstAmount: user?.tax.gstPercentage
-                ? calculateTax(ordereditems, user?.tax.gstPercentage)
+                ? calculateTax(
+                    ordereditems,
+                    discount || 0,
+                    user?.tax.gstPercentage
+                  )
                 : "",
               contactNo: localStorage.getItem("phone") || "",
               name: "",
@@ -799,7 +802,9 @@ export default function OrderCard() {
             <div className="space-y-4">
               <div className="flex items-center justify-between w-full">
                 <p className="text-xs font-semibold">To Pay</p>
-                <p className="text-xs">₹ {finalPrice}</p>
+                <p className="text-xs flex items-center ">
+                  <IndianRupee className="h-3 w-3" /> {finalPrice}
+                </p>
                 {/* I can minus the discount amount here */}
               </div>
               <div className="flex items-center justify-between w-full">
@@ -807,7 +812,7 @@ export default function OrderCard() {
                   Total savings with discount
                 </p>
                 <p className="text-xs text-green-500 font-medium">
-                  -₹{coupon?.discount || 0}
+                  -₹{discount || 0}
                 </p>
               </div>
               {coupon ? (
@@ -815,7 +820,7 @@ export default function OrderCard() {
                   <div className="text-xs ">
                     You saved {""}
                     <span className="text-green-500 text-md font-semibold">
-                      ₹{coupon.discount}
+                      ₹{discount}
                     </span>{" "}
                     with{" "}
                     <span className="text-blue-500 text-md font-semibold">
@@ -825,7 +830,10 @@ export default function OrderCard() {
                   <Button
                     variant="ghost"
                     className="p-0 text-xs text-blue-500 underline"
-                    onClick={() => setCoupon(null)}
+                    onClick={() => {
+                      setCoupon(null);
+                      setDiscount(0);
+                    }}
                   >
                     remove
                   </Button>
@@ -895,7 +903,7 @@ export default function OrderCard() {
                           Savings with {coupon.code}
                         </span>
                         <span className="text-xs text-green-600">
-                          - ₹{coupon.discount}
+                          - ₹{discount}
                         </span>
                       </div>
                     )}
@@ -905,7 +913,10 @@ export default function OrderCard() {
                         <span className="text-xs">{coupon.code} Applied</span>
                         <Trash2
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setCoupon(null)}
+                          onClick={() => {
+                            setCoupon(null);
+                            setDiscount(0);
+                          }}
                         />
                       </div>
                     )}
@@ -913,8 +924,7 @@ export default function OrderCard() {
                     <div className="flex justify-between items-center font-medium">
                       <span className="text-xs">Sub Total</span>
                       <span className="text-xs">
-                        ₹
-                        {calculateTotal(ordereditems) - (coupon?.discount || 0)}
+                        ₹{calculateTotal(ordereditems) - (discount || 0)}
                       </span>
                     </div>
                     <Popover>
@@ -930,6 +940,7 @@ export default function OrderCard() {
                           {user?.tax?.gstPercentage
                             ? calculateTax(
                                 ordereditems,
+                                discount || 0,
                                 user?.tax?.gstPercentage
                               )
                             : 0}
@@ -952,6 +963,7 @@ export default function OrderCard() {
                               {user?.tax?.gstPercentage
                                 ? calculateTax(
                                     ordereditems,
+                                    discount || 0,
                                     user?.tax?.gstPercentage
                                   )
                                 : 0}
@@ -997,13 +1009,17 @@ export default function OrderCard() {
               <span className="flex items-center text-sm">
                 <IndianRupee className="h-2 w-2" strokeWidth={3} />
                 {calculateTotal(ordereditems) +
-                  calculateTax(ordereditems, user?.tax?.gstPercentage) -
-                  (coupon?.discount || 0)}
+                  calculateTax(
+                    ordereditems,
+                    discount || 0,
+                    user?.tax?.gstPercentage
+                  ) -
+                  (discount || 0)}
               </span>
             ) : (
               <span className="flex items-center">
                 <IndianRupee className="h-2 w-2" strokeWidth={3} />
-                {calculateTotal(ordereditems) - (coupon?.discount || 0)}
+                {calculateTotal(ordereditems) - (discount || 0)}
               </span>
             )}
           </Button>

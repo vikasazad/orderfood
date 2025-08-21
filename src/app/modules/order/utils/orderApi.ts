@@ -21,121 +21,174 @@ export function calculateTotal(ordereditems: any) {
     return total + price * item.count;
   }, 0);
 }
-export function calculateTax(ordereditems: any, tax: string) {
-  const total = calculateTotal(ordereditems);
+export function calculateTax(ordereditems: any, discount: number, tax: string) {
+  const total = calculateTotal(ordereditems) - discount;
   const rounded = Math.round((total * Number(tax)) / 100);
   return rounded;
 }
 
 export async function sendOrder(orderData: any, token: string, attendant: any) {
+  console.log("orderData", orderData);
+  console.log("attendant", attendant);
   console.log("HERE");
-  const format = {
-    diningDetails: {
-      customer: {
-        name: orderData.name,
-        email: orderData.email,
-        phone: orderData.contactNo,
-        notificationToken: token,
+
+  const newOrder = {
+    orderId: orderData?.orderId,
+    specialRequirement: orderData?.specialrequirements || "",
+    items: orderData?.orderedItem || [],
+    attendant: attendant?.name || "",
+    attendantToken: attendant?.token || "",
+    attendantContact: attendant?.contact || "",
+    status: "Order placed",
+    timeOfRequest: new Date().toISOString(),
+    timeOfFullfilment: "",
+    payment: {
+      transctionId: orderData?.razorpayOrderId || "",
+      paymentStatus: "paid",
+      paymentType: "single",
+      mode: "online",
+      paymentId: orderData?.razorpayPaymentId || "",
+      subtotal: orderData?.subtotal,
+      price: orderData?.orderAmount || 0,
+      priceAfterDiscount: "",
+      timeOfTransaction: new Date().toISOString(),
+      gst: {
+        gstAmount: orderData?.gstAmount,
+        gstPercentage: orderData?.gstPercentage,
+        cgstAmount: "",
+        cgstPercentage: "",
+        sgstAmount: "",
+        sgstPercentage: "",
       },
-      orders: [
-        {
-          orderId: orderData.orderId,
-          specialRequirement: orderData.specialrequirements || "",
-          items: orderData.orderedItem || [],
-          attendant: attendant.name,
-          attendantToken: attendant.token,
-          status: "Order placed",
-          timeOfRequest: new Date().toISOString(),
-          timeOfFullfilment: "",
-          payment: {
-            transctionId: orderData.razorpayOrderId || "",
-            paymentStatus: "paid",
-            paymentType: "single",
-            mode: "online",
-            paymentId: orderData.razorpayPaymentId || "",
-            subtotal: orderData.subtotal,
-            price: orderData.orderAmount || 0,
-            priceAfterDiscount: "",
-            timeOfTransaction: new Date().toISOString(),
-            gst: {
-              gstAmount: orderData.gstAmount,
-              gstPercentage: orderData.gstPercentage,
-              cgstAmount: "",
-              cgstPercentage: "",
-              sgstAmount: "",
-              sgstPercentage: "",
-            },
-            discount: {
-              type: orderData.discountType || "none",
-              amount: orderData.discountAmount || 0,
-              code: orderData.discountCode || "",
-            },
-          },
-        },
-      ],
-      location: orderData.tableNo || "",
-      attendant: attendant.name || "",
-      attendantToken: attendant.token || "",
-      timeSeated: new Date().toISOString(),
-      timeLeft: "",
-      aggregator: "",
-      aggregatorLogo: "",
-      noOfGuests: "2",
-      capicity: "4",
-      status: "occupied",
+      discount: {
+        type: orderData?.discountType || "none",
+        amount: orderData?.discountAmount || 0,
+        code: orderData?.discountCode || "",
+      },
     },
-    issuesReported: {},
-    transctions: [
-      {
-        location: orderData.tableNo || "",
-        against: orderData.orderId || "",
-        attendant: attendant.name || "",
-        attendantToken: attendant.token,
-        bookingId: "",
-        payment: {
-          paymentStatus: "paid",
-          mode: "online",
-          paymentId: orderData.razorpayPaymentId || "",
-          timeOfTransaction: new Date(),
-          price: orderData.orderAmount || 0,
-          priceAfterDiscount: "",
-          gst: {
-            gstAmount: "",
-            gstPercentage: "",
-            cgstAmount: "",
-            cgstPercentage: "",
-            sgstAmount: "",
-            sgstPercentage: "",
-          },
-          discount: {
-            type: "",
-            amount: "",
-            code: "",
-          },
-        },
-      },
-    ],
   };
 
-  // Sanitize the format object
-  const sanitizedFormat = JSON.parse(
-    JSON.stringify(format, (key, value) => (value === undefined ? null : value))
-  );
-
-  // console.log(
-  //   "Sanitized format object:",
-  //   JSON.stringify(sanitizedFormat, null, 2)
-  // );
+  const newTransaction = {
+    location: orderData?.tableNo || "",
+    against: orderData?.orderId || "",
+    attendant: attendant?.name || "",
+    attendantToken: attendant?.token || "",
+    attendantContact: attendant?.contact || "",
+    bookingId: "",
+    payment: {
+      paymentStatus: "paid",
+      mode: "online",
+      paymentId: orderData?.razorpayPaymentId || "",
+      timeOfTransaction: new Date().toISOString(),
+      price: orderData?.orderAmount || 0,
+      priceAfterDiscount: "",
+      gst: {
+        gstAmount: "",
+        gstPercentage: "",
+        cgstAmount: "",
+        cgstPercentage: "",
+        sgstAmount: "",
+        sgstPercentage: "",
+      },
+      discount: {
+        type: "",
+        amount: "",
+        code: "",
+      },
+    },
+  };
 
   const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
   try {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const data = docSnap.data()?.live;
-      const newArr = [sanitizedFormat, ...data.tables];
-      await updateDoc(docRef, {
-        "live.tables": newArr,
-      });
+      const data = docSnap.data();
+      const tables = data?.live?.tables || [];
+
+      let tableFound = false;
+
+      // Iterate over tables to find the matching tableNo
+      for (const table of tables) {
+        if (table.diningDetails?.location === orderData.tableNo) {
+          tableFound = true;
+
+          // Add the new order to diningDetails.orders
+          table.diningDetails.orders = [
+            ...(table.diningDetails.orders || []),
+            newOrder,
+          ];
+
+          // Update customer information if not already set
+          if (!table.diningDetails.customer) {
+            table.diningDetails.customer = {
+              name: orderData?.name || "",
+              email: orderData?.email || "",
+              phone: orderData?.contactNo || "",
+              notificationToken: token || "",
+            };
+          }
+
+          table.diningDetails.attendant = attendant?.name || "";
+          table.diningDetails.attendantToken = attendant?.token || "";
+          table.diningDetails.attendantContact = attendant?.contact || "";
+          table.diningDetails.timeSeated =
+            table.diningDetails.timeSeated || new Date().toISOString();
+
+          // Add the new transaction
+          table.transctions = [...(table.transctions || []), newTransaction];
+
+          console.log(`Updates applied for tableNo: ${orderData.tableNo}`);
+        }
+      }
+
+      if (!tableFound) {
+        console.log(
+          `No table found with tableNo: ${orderData.tableNo}, creating new table entry`
+        );
+
+        // Create new table entry if no matching table found
+        const newTableEntry = {
+          diningDetails: {
+            customer: {
+              name: orderData?.name || "",
+              email: orderData?.email || "",
+              phone: orderData?.contactNo || "",
+              notificationToken: token || "",
+            },
+            orders: [newOrder],
+            location: orderData.tableNo || "",
+            attendant: attendant?.name || "",
+            attendantToken: attendant?.token || "",
+            attendantContact: attendant?.contact || "",
+            timeSeated: new Date().toISOString(),
+            timeLeft: "",
+            aggregator: "",
+            aggregatorLogo: "",
+            noOfGuests: "2",
+            capicity: "4",
+            status: "occupied",
+          },
+          issuesReported: {},
+          transctions: [newTransaction],
+        };
+
+        // Sanitize the new table entry
+        const sanitizedNewTable = JSON.parse(
+          JSON.stringify(newTableEntry, (key, value) =>
+            value === undefined ? null : value
+          )
+        );
+
+        tables.push(sanitizedNewTable);
+      }
+
+      console.log("tables found", tables);
+
+      // Save the updated data back to Firestore
+      await updateDoc(docRef, { "live.tables": tables });
+      console.log("Data updated successfully.");
+    } else {
+      console.error("Document does not exist.");
     }
   } catch (error) {
     console.error("Error updating order:", error);
@@ -155,6 +208,7 @@ export async function sendHotelOrder(
     items: orderData.orderedItem || [],
     attendant: attendant.name,
     attendantToken: attendant.token || "",
+    attendantContact: attendant.contact || "",
     status: "Order placed",
     timeOfRequest: new Date().toISOString(),
     timeOfFullfilment: "",
@@ -189,6 +243,7 @@ export async function sendHotelOrder(
     against: orderData.orderId || "",
     attendant: attendant.name || "",
     attendantToken: attendant.token || "",
+    attendantContact: attendant.contact || "",
     bookingId: "",
     payment: {
       paymentStatus: "paid",
@@ -235,6 +290,7 @@ export async function sendHotelOrder(
 
           room.diningDetails.attendant = attendant.name;
           room.diningDetails.attendantToken = attendant.token || "";
+          room.diningDetails.attendantContact = attendant.contact || "";
           room.diningDetails.timeOfRequest = new Date().toISOString();
 
           // Add the new transaction
@@ -908,4 +964,14 @@ async function findBusinessWithStaff(_phoneNumber: string): Promise<string[]> {
   // This is a simplified implementation
   // In production, you might want to maintain an index or search more efficiently
   return ["vikumar.azad@gmail.com"]; // Return known business emails for now
+}
+
+export async function findCoupon(couponCode: string) {
+  const docRef = doc(db, "vikumar.azad@gmail.com", "info");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data().hotel?.hotelDiscount || [];
+    const coupon = data.find((coupon: any) => coupon.code === couponCode);
+    return coupon;
+  }
 }

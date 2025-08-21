@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Menu, Search } from "lucide-react";
+import { IndianRupee, Menu, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ import Script from "next/script";
 
 export default function Header({ data }: { data: any }) {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.addToOrderData);
   console.log("HERETHEDATA", user);
   const [expanded, setExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -60,10 +60,11 @@ export default function Header({ data }: { data: any }) {
 
   const [loadScript, setLoadScript] = useState(false);
   const [open, setOpen] = useState(false);
-
+  console.log("user", user, localStorage.getItem("phone"));
   useEffect(() => {
     console.log("h0");
-    if (!user?.email || !user?.phone) {
+    const phone = localStorage.getItem("phone") || user?.phone;
+    if (!user?.email || !phone) {
       console.log("Email or phone is missing in table data.");
       return;
     }
@@ -71,7 +72,7 @@ export default function Header({ data }: { data: any }) {
       console.log("h1");
       const unsubscribe = getOrderDataHotel(
         user.email,
-        user.phone,
+        phone,
         (result: any) => {
           if (result) {
             setOrderData(result);
@@ -85,17 +86,18 @@ export default function Header({ data }: { data: any }) {
         if (unsubscribe) unsubscribe(); // Ensure cleanup
       };
     } else {
-      console.log("h1");
-      if (user.email && user.phone) {
+      console.log("here in restaurant");
+      if (user.email && phone) {
         console.log("h2");
         const unsubscribe = getOrderData(
           user.email,
-          user?.phone,
+          phone,
 
           (result: any) => {
+            console.log("result1", result);
             if (result) {
+              console.log("result2", result);
               setOrderData(result);
-              console.log("result", result);
             } else {
               setOrderData([]);
             }
@@ -107,7 +109,7 @@ export default function Header({ data }: { data: any }) {
         };
       }
     }
-  }, [user.email, user.phone]);
+  }, [user.email]);
 
   console.log("staff", orderData);
   console.log("DATA", orderSelectedItems);
@@ -241,7 +243,7 @@ export default function Header({ data }: { data: any }) {
     );
   };
 
-  console.log("orderDAta", orderData[0]?.diningDetails?.orders.length);
+  console.log("orderDAta", orderData);
 
   return (
     <>
@@ -277,142 +279,170 @@ export default function Header({ data }: { data: any }) {
                 </SheetTitle>
               </SheetHeader>
 
-              {orderData[0]?.diningDetails?.orders.length > 0 ? (
+              {orderData.length > 0 ? (
                 <>
                   <div className="text-lg">Order Summary:</div>
-                  {orderData[0]?.diningDetails?.orders.map(
-                    (item: any, i: any) => {
-                      console.log(item);
-                      return (
-                        <div key={i}>
-                          <Separator className="my-2" />
-                          <div className="grid gap-2">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm mt-2">
-                                <span className="text-muted-foreground">
-                                  Order Number:
-                                </span>
-                                <span className="font-medium">
-                                  {item.orderId}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Payment ID:
-                                </span>
-                                <span className="font-medium">
-                                  {item.payment.paymentId}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Estimated Delivery:
-                                </span>
-                                <span className="font-medium">
-                                  20-25 minutes
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Table:
-                                </span>
-                                <span className="font-medium text-right">
-                                  {`T-${orderData[0].diningDetails.location}`}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                <h3 className="font-semibold">Order Items</h3>
-                                {/* <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleCancelSelected(item.orderId)
-                                  }
-                                  disabled={
-                                    !orderSelectedItems[item.orderId] ||
-                                    orderSelectedItems[item.orderId].length ===
-                                      0
-                                  }
-                                >
-                                  Cancel Selected
-                                </Button> */}
+                  {orderData?.map((order: any, i: any) => {
+                    console.log(order);
+                    return order.diningDetails.orders.map(
+                      (item: any, itemIndex: number) => {
+                        return (
+                          <div key={`${i}-${itemIndex}`}>
+                            <Separator />
+                            <div className="grid gap-2">
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-sm mt-2">
+                                  <span className="text-muted-foreground">
+                                    Order Number:
+                                  </span>
+                                  <span className="font-medium">
+                                    {item.orderId}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    Payment ID:
+                                  </span>
+                                  <span className="font-medium">
+                                    {item.payment.paymentId}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    Estimated Delivery:
+                                  </span>
+                                  <span className="font-medium">
+                                    20-25 minutes
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    Table:
+                                  </span>
+                                  <span className="font-medium text-right">
+                                    {`T-${orderData[0].diningDetails.location}`}
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="divide-y">
-                                {item.items.map((itm: any, index: number) => (
-                                  <div
-                                    key={index}
-                                    className=" flex items-center gap-4"
+                              <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <h3 className="font-semibold">Order Items</h3>
+                                  {/* <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleCancelSelected(item.orderId)
+                                    }
+                                    disabled={
+                                      !orderSelectedItems[item.orderId] ||
+                                      orderSelectedItems[item.orderId].length ===
+                                        0
+                                    }
                                   >
-                                    {/* <Checkbox
-                                      checked={orderSelectedItems[
-                                        item.orderId
-                                      ]?.includes(`${itm.id}`)}
-                                      onCheckedChange={() =>
-                                        handleItemSelect(item.orderId, itm.id)
-                                      }
-                                    /> */}
-                                    <div className="flex-1">
-                                      <div className="font-medium">
-                                        {itm.name}
+                                    Cancel Selected
+                                  </Button> */}
+                                </div>
+
+                                <div className="divide-y">
+                                  {item.items.map((itm: any, index: number) => {
+                                    console.log("itm", itm);
+                                    return (
+                                      <div
+                                        key={index}
+                                        className=" flex items-center gap-4"
+                                      >
+                                        {/* <Checkbox
+                                        checked={orderSelectedItems[
+                                          item.orderId
+                                        ]?.includes(`${itm.id}`)}
+                                        onCheckedChange={() =>
+                                          handleItemSelect(item.orderId, itm.id)
+                                        }
+                                      /> */}
+                                        <div className="flex-1">
+                                          <div className="font-medium">
+                                            {itm.name}
+                                          </div>
+                                          <div className="text-sm text-muted-foreground">
+                                            Quantity: {itm.quantity}
+                                          </div>
+                                        </div>
+                                        <div className="font-medium flex items-center ">
+                                          <IndianRupee className="h-3 w-3" />
+                                          {Number(itm.price)}
+                                        </div>
                                       </div>
-                                      <div className="text-sm text-muted-foreground">
-                                        Quantity: {itm.quantity}
-                                      </div>
-                                    </div>
-                                    <div className="font-medium">
-                                      ₹{Number(itm.price)}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-4 border-t">
-                              <span className="text-lg font-semibold">
-                                Subtotal
-                              </span>
-                              <span className="text-lg font-semibold">
-                                ₹{item.payment.subtotal}
-                              </span>
-                            </div>
-                            {item.payment.gst.gstAmount ? (
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">
-                                  {`Tax (${item.payment.gst.gstPercentage}%)`}
-                                </span>
-                                <span className="text-sm font-medium">
-                                  ₹{item.payment.gst.gstAmount}
-                                </span>
-                              </div>
-                            ) : (
-                              ""
-                            )}
-
-                            <div className="flex justify-between items-center pt-4 border-t">
-                              <div className="flex items-center">
-                                <span className="text-lg font-semibold mr-2">
-                                  Total
-                                </span>
-                                {item.payment.paymentStatus === "paid" ? (
-                                  <Badge>Paid</Badge>
-                                ) : (
-                                  <Badge>Pending</Badge>
-                                )}
+                                    );
+                                  })}
+                                </div>
                               </div>
 
-                              <span className="text-lg font-semibold">
-                                ₹{item.payment.price}
-                              </span>
+                              <div className="flex justify-between items-center pt-2 border-t">
+                                <span className="text-xs font-semibold text-muted-foreground">
+                                  Savings using{" "}
+                                  <span className="text-purple-300 tracking-wider">
+                                    {item.payment.discount?.code}
+                                  </span>
+                                </span>
+                                <div className="text-sm font-semibold flex items-center  text-green-500">
+                                  -
+                                  <IndianRupee
+                                    className="h-3 w-3"
+                                    strokeWidth={3}
+                                  />
+                                  <span className="text-sm ">
+                                    {item.payment.discount?.amount || 0}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between items-center pt-4 border-t">
+                                <span className="text-lg font-semibold">
+                                  Subtotal
+                                </span>
+                                <span className="text-lg font-semibold flex items-center ">
+                                  <IndianRupee className="h-3 w-3" />
+                                  {item.payment.subtotal}
+                                </span>
+                              </div>
+                              {item.payment.gst.gstAmount ? (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-muted-foreground">
+                                    {`Tax (${item.payment.gst.gstPercentage}%)`}
+                                  </span>
+                                  <span className="text-sm font-medium flex items-center ">
+                                    <IndianRupee className="h-3 w-3" />
+                                    {item.payment.gst.gstAmount}
+                                  </span>
+                                </div>
+                              ) : (
+                                ""
+                              )}
+
+                              <div className="flex justify-between items-center pt-4 border-t">
+                                <div className="flex items-center">
+                                  <span className="text-lg font-semibold mr-2">
+                                    Total
+                                  </span>
+                                  {item.payment.paymentStatus === "paid" ? (
+                                    <Badge>Paid</Badge>
+                                  ) : (
+                                    <Badge>Pending</Badge>
+                                  )}
+                                </div>
+
+                                <span className="text-lg font-semibold flex items-center ">
+                                  <IndianRupee className="h-3 w-3" />
+                                  {item.payment.price}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    }
-                  )}
+                        );
+                      }
+                    );
+                  })}
 
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogContent className="w-[90%] p-5 ">
@@ -479,7 +509,7 @@ export default function Header({ data }: { data: any }) {
                   </Dialog>
                 </>
               ) : (
-                <p>Welcome to restaurant please order and enjoy</p>
+                <p>Welcome to {data.name} please order and enjoy</p>
               )}
               <SheetDescription></SheetDescription>
               {orderData?.diningDetails?.length > 0 && (

@@ -285,7 +285,6 @@ import { useDispatch } from "react-redux";
 import { jwtVerify } from "jose";
 import { AppDispatch } from "@/lib/store";
 import { addUser } from "@/lib/features/addToOrderSlice";
-import { setAuth } from "@/lib/features/authSlice";
 import { checkTableAvailability } from "../utils/serverApi";
 import { Progress } from "@/components/ui/progress";
 
@@ -356,7 +355,6 @@ function TokenHandler() {
           }
 
           dispatch(addUser(decoded.payload));
-          dispatch(setAuth({ token: token, user: decoded.payload }));
           localStorage.setItem("token", token);
           console.log("User data and token saved to Redux");
           setProgressText("Authentication complete");

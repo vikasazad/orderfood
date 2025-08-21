@@ -1,25 +1,43 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
 import { combineReducers } from "@reduxjs/toolkit";
 import searchReducer from "./features/searchSlice";
 import addToOrderReducer from "./features/addToOrderSlice";
 import activeFooterItemReducer from "./features/activeFooterCategory";
-import authReducer from "./features/authSlice";
+
+// Create a custom storage that works with SSR
+const createNoopStorage = () => {
+  return {
+    getItem() {
+      return Promise.resolve(null);
+    },
+    setItem(_: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem() {
+      return Promise.resolve();
+    },
+  };
+};
+
+// Use localStorage if available, otherwise use noop storage
+const storage =
+  typeof window !== "undefined"
+    ? require("redux-persist/lib/storage").default
+    : createNoopStorage();
 
 // Persist configuration for auth slice
 const authPersistConfig = {
-  key: "auth",
+  key: "addToOrderData",
   storage,
-  whitelist: ["token", "isAuthenticated", "user"], // Only persist these fields
+  whitelist: ["addToOrderData", "addedItemIds", "finalOrder", "token", "user"], // Only persist these fields
 };
 
 // Combine all reducers
 const rootReducer = combineReducers({
   searchTerm: searchReducer,
-  addToOrderData: addToOrderReducer,
+  addToOrderData: persistReducer(authPersistConfig, addToOrderReducer),
   activeFooterItem: activeFooterItemReducer,
-  auth: persistReducer(authPersistConfig, authReducer),
 });
 
 const store = () => {

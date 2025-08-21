@@ -93,7 +93,7 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       retryLoadToken.current += 1;
-      console.error("An error occurred while retrieving token. Retrying...");
+      console.log("An error occurred while retrieving token. Retrying...");
       isLoading.current = false;
       await loadToken();
       return;
