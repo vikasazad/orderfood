@@ -285,7 +285,7 @@ import { useDispatch } from "react-redux";
 import { jwtVerify } from "jose";
 import { AppDispatch } from "@/lib/store";
 import { addUser } from "@/lib/features/addToOrderSlice";
-import { checkTableAvailability } from "../utils/serverApi";
+import { checkTableAvailability, getTax } from "../utils/serverApi";
 import { Progress } from "@/components/ui/progress";
 
 function TokenHandler() {
@@ -335,7 +335,7 @@ function TokenHandler() {
         if (decoded?.payload) {
           console.log("Token decoded successfully:", decoded.payload);
           setProgress(80);
-
+          let tax = {};
           // Check table availability for restaurant tokens
           if (decoded.payload.tag === "restaurant") {
             console.log("Checking table availability...");
@@ -344,17 +344,19 @@ function TokenHandler() {
               decoded.payload.email,
               decoded.payload.tableNo
             );
+            tax = await getTax(decoded.payload.email);
+            if (!tax) {
+              console.log("Tax not found");
+            }
             console.log("Table availability check result:", tableAvailable);
             setIsValidTable(tableAvailable);
-
             if (!tableAvailable) {
               setHasToken(false);
               setProgress(100);
               return;
             }
           }
-
-          dispatch(addUser(decoded.payload));
+          dispatch(addUser({ ...decoded.payload, tax: tax }));
           localStorage.setItem("token", token);
           console.log("User data and token saved to Redux");
           setProgressText("Authentication complete");

@@ -51,6 +51,7 @@ import {
   sendOrder,
   sendStaffAssignmentRequest,
   sendWhatsAppMessage,
+  updateOrdersForAttendant,
 } from "../utils/orderApi";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -87,7 +88,7 @@ export default function OrderCard() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.addToOrderData);
-
+  // console.log("user", user);
   const ordereditems = useSelector(
     (state: RootState) => state.addToOrderData.addToOrderData
   );
@@ -154,7 +155,7 @@ export default function OrderCard() {
         return total + price * item.count;
       }, 0) - discount;
     // console.log("total", total);
-    const digit = Number(user?.tax.gstPercentage) || 0;
+    const digit = Number(user?.tax.all) || 0;
     // console.log(digit);
     const tax = Math.round((total * digit) / 100);
 
@@ -210,7 +211,6 @@ export default function OrderCard() {
     setTempSpecialRequirements("");
     setSpecialRequirements("");
   };
-  // console.log(finalPrice);
   function generateOrderId(restaurantCode: string, tableNo: string) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
     const orderId = `${restaurantCode}:T-${tableNo}:${randomNumber}`;
@@ -235,8 +235,6 @@ export default function OrderCard() {
     // createOrder();
     // router.push("/Detail");
   };
-  // console.log("user", user?.phone);
-
   const createOrder = async () => {
     const res = await fetch("/api/createOrder", {
       method: "POST",
@@ -311,6 +309,7 @@ export default function OrderCard() {
               discountCode: coupon?.code || "",
               discountAmount: coupon?.discount || 0,
               discountType: "price",
+              discountDiscount: discount || 0,
             };
             console.log("orderData", orderData);
 
@@ -363,9 +362,10 @@ export default function OrderCard() {
                 user?.tableNo,
                 "table"
               );
+              // we need to also send message to the staff via whatsapp
             }
 
-            // await updateOrdersForAttendant(attendant?.name, orderId);
+            await updateOrdersForAttendant(attendant?.name, orderId);
             if (user?.tag === "restaurant") {
               await removeTableByNumber(user?.email, user?.tableNo);
             }
@@ -539,7 +539,7 @@ export default function OrderCard() {
         <Card className="relative rounded-3xl">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-md font-bold">Order</h1>
+              <h1 className="text-lg font-bold">Order</h1>
 
               <HandPlatter className="h-6 w-6" />
             </div>
@@ -574,8 +574,9 @@ export default function OrderCard() {
                         {item.selectedType}
                       </p>
                       <Dot className="h-2 w-2 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">
-                        ₹{item.item.price[item.selectedType]}
+                      <p className="text-xs text-muted-foreground flex items-center">
+                        <IndianRupee className="h-3 w-3" />
+                        {item.item.price[item.selectedType]}
                       </p>
                     </div>
                   </div>
@@ -657,8 +658,9 @@ export default function OrderCard() {
                         )}
                     </Drawer>
                   </div>
-                  <p className="mt-1 font-medium">
-                    ₹ {item.item.price[item.selectedType]}
+                  <p className="flex items-center mt-1 font-medium  justify-end">
+                    <IndianRupee className="h-3 w-3" />
+                    {item.item.price[item.selectedType]}
                   </p>
                 </div>
               </div>
@@ -759,11 +761,11 @@ export default function OrderCard() {
                 <span>MRP Total</span>
                 <span>₹{calculateTotal(ordereditems)}</span>
               </div>
-              {user?.tax?.gstPercentage ? (
+              {user?.tax?.all ? (
                 <div className="flex justify-between">
                   <span>Taxes</span>
                   <span>
-                    ₹{calculateTax(ordereditems, user?.tax?.gstPercentage)}
+                    ₹{calculateTax(ordereditems, user?.tax?.all)}
                   </span>
                 </div>
               ) : (
@@ -774,10 +776,10 @@ export default function OrderCard() {
                 <span>Total Amount</span>
                 <span>₹{calculateTotal(ordereditems)}</span>
                 <span>
-                  {user?.tax?.gstPercentage
+                  {user?.tax?.all
                     ? `₹${
                         calculateTotal(ordereditems) +
-                        calculateTax(ordereditems, user?.tax?.gstPercentage)
+                        calculateTax(ordereditems, user?.tax?.all)
                       }`
                     : `₹${calculateTotal(ordereditems)}`}
                 </span>
@@ -789,7 +791,7 @@ export default function OrderCard() {
         <Card className="mt-4 rounded-3xl mb-12">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-md font-bold">Payment Details</h1>
+              <h1 className="text-lg font-bold">Payment Details</h1>
 
               <ChevronRight
                 className="self-right h-4 w-4 cursor-pointer"
@@ -811,16 +813,18 @@ export default function OrderCard() {
                 <p className="text-xs font-semibold">
                   Total savings with discount
                 </p>
-                <p className="text-xs text-green-500 font-medium">
-                  -₹{discount || 0}
+                <p className="text-xs text-green-500 font-medium flex items-center gap-1">
+                  -<IndianRupee className="h-3 w-3" strokeWidth={3} />
+                  {discount || 0}
                 </p>
               </div>
               {coupon ? (
                 <div className="h-5 flex items-center justify-between w-full px-2 py-0 rounded-xl bg-pink-200/50 ">
                   <div className="text-xs ">
                     You saved {""}
-                    <span className="text-green-500 text-md font-semibold">
-                      ₹{discount}
+                    <span className="text-green-500 text-md font-semibold flex items-center gap-1">
+                      <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                      {discount}
                     </span>{" "}
                     with{" "}
                     <span className="text-blue-500 text-md font-semibold">
@@ -892,8 +896,9 @@ export default function OrderCard() {
                       <span className="text-xs font-light">
                         Item amount({ordereditems.length})
                       </span>
-                      <span className="text-xs font-semibold">
-                        ₹ {calculateTotal(ordereditems)}
+                      <span className="text-xs font-semibold flex items-center gap-1">
+                        <IndianRupee className="h-3 w-3" strokeWidth={3} />{" "}
+                        {calculateTotal(ordereditems)}
                       </span>
                     </div>
 
@@ -902,8 +907,9 @@ export default function OrderCard() {
                         <span className="text-xs text-green-600">
                           Savings with {coupon.code}
                         </span>
-                        <span className="text-xs text-green-600">
-                          - ₹{discount}
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          - <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                          {discount}
                         </span>
                       </div>
                     )}
@@ -923,8 +929,9 @@ export default function OrderCard() {
 
                     <div className="flex justify-between items-center font-medium">
                       <span className="text-xs">Sub Total</span>
-                      <span className="text-xs">
-                        ₹{calculateTotal(ordereditems) - (discount || 0)}
+                      <span className="text-xs flex items-center gap-1">
+                        <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                        {calculateTotal(ordereditems) - (discount || 0)}
                       </span>
                     </div>
                     <Popover>
@@ -937,11 +944,11 @@ export default function OrderCard() {
                         </div>
                         <span className="text-sm">
                           ₹
-                          {user?.tax?.gstPercentage
+                          {user?.tax?.all
                             ? calculateTax(
                                 ordereditems,
                                 discount || 0,
-                                user?.tax?.gstPercentage
+                                user?.tax?.all
                               )
                             : 0}
                         </span>
@@ -960,11 +967,11 @@ export default function OrderCard() {
                                 className="h-3 w-3"
                                 strokeWidth={3}
                               />
-                              {user?.tax?.gstPercentage
+                              {user?.tax?.all
                                 ? calculateTax(
                                     ordereditems,
                                     discount || 0,
-                                    user?.tax?.gstPercentage
+                                    user?.tax?.all
                                   )
                                 : 0}
                             </span>
@@ -977,7 +984,10 @@ export default function OrderCard() {
 
                     <div className="flex justify-between items-center font-semibold text-xs">
                       <span>To Pay</span>
-                      <span>₹{finalPrice}</span>
+                      <span className="flex items-center gap-1">
+                        <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                        {finalPrice}
+                      </span>
                     </div>
                   </div>
                 </DrawerContent>
@@ -990,10 +1000,10 @@ export default function OrderCard() {
           {/* <div className="flex items-center">
             <span className="text-sm text-muted-foreground">TOTAL</span>
             <span className="text-xl font-semibold ml-3">
-              {user?.tax?.gstPercentage
+              {user?.tax?.all
                 ? `₹${
                     calculateTotal(ordereditems) +
-                    calculateTax(ordereditems, user?.tax?.gstPercentage) -
+                    calculateTax(ordereditems, user?.tax?.all) -
                     (coupon?.discount || 0)
                   }`
                 : `₹${calculateTotal(ordereditems) - (coupon?.discount || 0)}`}
@@ -1005,15 +1015,11 @@ export default function OrderCard() {
             onClick={() => handlePlaceOrder()}
           >
             Pay
-            {user?.tax?.gstPercentage ? (
+            {user?.tax?.all ? (
               <span className="flex items-center text-sm">
                 <IndianRupee className="h-2 w-2" strokeWidth={3} />
                 {calculateTotal(ordereditems) +
-                  calculateTax(
-                    ordereditems,
-                    discount || 0,
-                    user?.tax?.gstPercentage
-                  ) -
+                  calculateTax(ordereditems, discount || 0, user?.tax?.all) -
                   (discount || 0)}
               </span>
             ) : (

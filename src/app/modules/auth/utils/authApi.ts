@@ -20,9 +20,12 @@ export function getOrderData(
       if (docSnap.exists()) {
         const data = docSnap.data().live.tables;
 
-        const updatedData = data.filter(
-          (item: any) => item.diningDetails?.customer?.phone === phone
-        );
+        const updatedData =
+          data?.length > 0
+            ? data.filter(
+                (item: any) => item.diningDetails?.customer?.phone === phone
+              )
+            : [];
 
         console.log("Updated data:", updatedData);
         if (callback) callback(updatedData);

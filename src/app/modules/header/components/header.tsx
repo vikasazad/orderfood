@@ -224,7 +224,7 @@ export default function Header({ data }: { data: any }) {
     if (open) {
       setOpen(false);
     }
-    const gstPercentage = user?.tax?.gstPercentage;
+    const gstPercentage = user?.tax?.all;
     const { amount, status, pendingOrders, totalPendingGstAmount } =
       calculateGrandTotal();
 
@@ -378,6 +378,8 @@ export default function Header({ data }: { data: any }) {
                                 </div>
                               </div>
 
+
+                              
                               <div className="flex justify-between items-center pt-2 border-t">
                                 <span className="text-xs font-semibold text-muted-foreground">
                                   Savings using{" "}
@@ -529,8 +531,12 @@ export default function Header({ data }: { data: any }) {
                                 Paid
                               </Badge>
 
-                              <span className="text-xl font-bold">
-                                ₹{amount}
+                              <span className="text-xl font-bold flex items-center gap-1">
+                                <IndianRupee
+                                  className="h-3 w-3"
+                                  strokeWidth={3}
+                                />
+                                {amount}
                               </span>
                             </div>
                           ) : (
@@ -544,8 +550,12 @@ export default function Header({ data }: { data: any }) {
                                 </Badge>
                               </div>
 
-                              <span className="text-xl font-bold">
-                                ₹{amount}
+                              <span className="text-xl font-bold flex items-center gap-1">
+                                <IndianRupee
+                                  className="h-3 w-3"
+                                  strokeWidth={3}
+                                />
+                                {amount}
                               </span>
                             </div>
                           )}
@@ -578,7 +588,7 @@ export default function Header({ data }: { data: any }) {
             <Input
               className={cn(
                 "border-none bg-transparent p-0 focus-visible:ring-0",
-                expanded ? "w-full opacity-100" : "w-0 opacity-0"
+                expanded ? "w-full h-6 opacity-100" : "w-0 opacity-0"
               )}
               placeholder="Search anything"
               type="search"

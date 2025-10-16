@@ -60,11 +60,14 @@ export async function sendOrder(orderData: any, token: string, attendant: any) {
         sgstAmount: "",
         sgstPercentage: "",
       },
-      discount: {
-        type: orderData?.discountType || "none",
-        amount: orderData?.discountAmount || 0,
-        code: orderData?.discountCode || "",
-      },
+      discount: [
+        {
+          type: orderData?.discountType || "",
+          amount: orderData?.discountAmount || "",
+          code: orderData?.discountCode || "",
+          discount: orderData?.discountDiscount || 0,
+        },
+      ],
     },
   };
 
@@ -90,11 +93,14 @@ export async function sendOrder(orderData: any, token: string, attendant: any) {
         sgstAmount: "",
         sgstPercentage: "",
       },
-      discount: {
-        type: "",
-        amount: "",
-        code: "",
-      },
+      discount: [
+        {
+          type: orderData?.discountType || "",
+          amount: orderData?.discountAmount || "",
+          code: orderData?.discountCode || "",
+          discount: orderData?.discountDiscount || 0,
+        },
+      ],
     },
   };
 
@@ -230,11 +236,14 @@ export async function sendHotelOrder(
         sgstAmount: "",
         sgstPercentage: "",
       },
-      discount: {
-        type: "none",
-        amount: 0,
-        code: "",
-      },
+      discount: [
+        {
+          type: orderData?.discountType || "",
+          amount: orderData?.discountAmount || "",
+          code: orderData?.discountCode || "",
+          discount: orderData?.discountDiscount || 0,
+        },
+      ],
     },
   };
 
@@ -260,11 +269,14 @@ export async function sendHotelOrder(
         sgstAmount: "",
         sgstPercentage: "",
       },
-      discount: {
-        type: "",
-        amount: "",
-        code: "",
-      },
+      discount: [
+        {
+          type: orderData?.discountType || "",
+          amount: orderData?.discountAmount || "",
+          code: orderData?.discountCode || "",
+          discount: orderData?.discountDiscount || 0,
+        },
+      ],
     },
   };
 
@@ -690,7 +702,7 @@ export async function sendStaffAssignmentRequest(
       // Set timeout using configurable duration
       setTimeout(() => {
         handleAssignmentTimeout(orderId);
-      }, 7 * 60 * 1000);
+      }, 5 * 60 * 1000);
 
       return { success: true, messageId };
     }
@@ -945,7 +957,7 @@ async function getReceptionistTokens(): Promise<string[]> {
         );
 
         receptionists.forEach((receptionist: any) => {
-          if (receptionist.notificationToken) {
+          if (receptionist?.notificationToken.trim() !== "") {
             tokens.push(receptionist.notificationToken);
           }
         });
