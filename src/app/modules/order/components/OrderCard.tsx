@@ -332,7 +332,9 @@ export default function OrderCard() {
                 ordereditems.map((er: any) => {
                   return createOrderData(er);
                 }),
-                finalPrice
+                finalPrice,
+                attendant?.name,
+                attendant?.contact
               );
             } else {
               await sendOrder(orderData, token, attendant);
@@ -343,7 +345,9 @@ export default function OrderCard() {
                 ordereditems.map((er: any) => {
                   return createOrderData(er);
                 }),
-                finalPrice
+                finalPrice,
+                attendant?.name,
+                attendant?.contact
               );
               if (localStorage.getItem("phone")) {
                 console.log("user?.phone", localStorage.getItem("phone"));

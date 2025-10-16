@@ -472,7 +472,9 @@ export async function addKitchenOrder(
   orderId: string,
   customerName: string,
   items: any[],
-  price: number
+  price: number,
+  attendantName: string,
+  attendantContact: string
 ) {
   try {
     // Reference to the Firestore document containing kitchen orders
@@ -503,6 +505,8 @@ export async function addKitchenOrder(
       completedAt: null,
       totalAmount: price,
       preparationTimeMinutes: null,
+      attendantName: attendantName,
+      attendantContact: attendantContact,
     };
 
     // Add the new order to the kitchen orders
@@ -951,12 +955,10 @@ async function getReceptionistTokens(): Promise<string[]> {
 
         const receptionists = staff.filter(
           (member: any) =>
-            member.role === "receptionist" &&
-            member.notificationToken &&
-            member.status === "online"
+            member.role === "receptionist" && member.status === "online"
         );
 
-        receptionists.forEach((receptionist: any) => {
+        receptionists?.forEach((receptionist: any) => {
           if (receptionist?.notificationToken.trim() !== "") {
             tokens.push(receptionist.notificationToken);
           }
