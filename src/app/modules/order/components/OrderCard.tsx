@@ -130,7 +130,7 @@ export default function OrderCard() {
       // console.log("couponResult", couponResult);
       if (couponResult) {
         setCoupon(couponResult);
-        const total = ordereditems.reduce((total, item) => {
+        const total = ordereditems.reduce((total: any, item: any) => {
           const price = item.item.price[item.selectedType];
           return total + price * item.count;
         }, 0);
@@ -284,12 +284,13 @@ export default function OrderCard() {
               orderAmount: finalPrice,
               subtotal: calculateTotal(ordereditems),
               gstPercentage: user?.tax.gstPercentage || "",
-              gstAmount: user?.tax.gstPercentage
+              gstAmount: user?.tax.all
                 ? calculateTax(
-                    ordereditems,
-                    discount || 0,
+                    calculateTotal(ordereditems),
+                    calculateTotal(ordereditems),
+                    "restaurant",
                     user?.tax.gstPercentage
-                  )
+                  ).gstAmount
                 : "",
               contactNo: localStorage.getItem("phone") || "",
               name: "",
@@ -549,7 +550,7 @@ export default function OrderCard() {
             </div>
           </CardHeader>
           <CardContent className="px-3 py-3 space-y-6">
-            {ordereditems.map((item, id) => (
+            {ordereditems.map((item: any, id: any) => (
               <div key={id} className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 mt-1">
@@ -769,7 +770,7 @@ export default function OrderCard() {
                 <div className="flex justify-between">
                   <span>Taxes</span>
                   <span>
-                    ₹{calculateTax(ordereditems, user?.tax?.all)}
+                    ₹{calculateTax(ordereditems, user?.tax?.all).gstAmount}
                   </span>
                 </div>
               ) : (
@@ -783,7 +784,7 @@ export default function OrderCard() {
                   {user?.tax?.all
                     ? `₹${
                         calculateTotal(ordereditems) +
-                        calculateTax(ordereditems, user?.tax?.all)
+                        calculateTax(ordereditems, user?.tax?.all).gstAmount
                       }`
                     : `₹${calculateTotal(ordereditems)}`}
                 </span>
@@ -950,10 +951,11 @@ export default function OrderCard() {
                           ₹
                           {user?.tax?.all
                             ? calculateTax(
-                                ordereditems,
-                                discount || 0,
+                                calculateTotal(ordereditems),
+                                calculateTotal(ordereditems),
+                                "restaurant",
                                 user?.tax?.all
-                              )
+                              ).gstAmount
                             : 0}
                         </span>
                       </div>
@@ -973,10 +975,11 @@ export default function OrderCard() {
                               />
                               {user?.tax?.all
                                 ? calculateTax(
-                                    ordereditems,
-                                    discount || 0,
+                                    calculateTotal(ordereditems),
+                                    calculateTotal(ordereditems),
+                                    "restaurant",
                                     user?.tax?.all
-                                  )
+                                  ).gstAmount
                                 : 0}
                             </span>
                           </div>
@@ -1007,7 +1010,7 @@ export default function OrderCard() {
               {user?.tax?.all
                 ? `₹${
                     calculateTotal(ordereditems) +
-                    calculateTax(ordereditems, user?.tax?.all) -
+                    calculateTax(ordereditems, user?.tax?.all).gstAmount -
                     (coupon?.discount || 0)
                   }`
                 : `₹${calculateTotal(ordereditems) - (coupon?.discount || 0)}`}
@@ -1023,7 +1026,12 @@ export default function OrderCard() {
               <span className="flex items-center text-sm">
                 <IndianRupee className="h-2 w-2" strokeWidth={3} />
                 {calculateTotal(ordereditems) +
-                  calculateTax(ordereditems, discount || 0, user?.tax?.all) -
+                  calculateTax(
+                    calculateTotal(ordereditems),
+                    calculateTotal(ordereditems),
+                    "restaurant",
+                    user?.tax?.all
+                  ).gstAmount -
                   (discount || 0)}
               </span>
             ) : (
