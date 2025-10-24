@@ -356,7 +356,7 @@ function TokenHandler() {
               return;
             }
           }
-          dispatch(addUser({ ...decoded.payload, tax: tax }));
+          dispatch(addUser({ ...decoded.payload, tax: { restaurant: tax } }));
           localStorage.setItem("token", token);
           console.log("User data and token saved to Redux");
           setProgressText("Authentication complete");

@@ -155,7 +155,7 @@ export default function OrderCard() {
         return total + price * item.count;
       }, 0) - discount;
     // console.log("total", total);
-    const digit = Number(user?.tax.all) || 0;
+    const digit = Number(user?.tax.restaurant?.all) || 0;
     // console.log(digit);
     const tax = Math.round((total * digit) / 100);
 
@@ -766,11 +766,11 @@ export default function OrderCard() {
                 <span>MRP Total</span>
                 <span>₹{calculateTotal(ordereditems)}</span>
               </div>
-              {user?.tax?.all ? (
+              {user?.tax?.restaurant   ? (
                 <div className="flex justify-between">
                   <span>Taxes</span>
                   <span>
-                    ₹{calculateTax(ordereditems, user?.tax?.all).gstAmount}
+                    ₹{calculateTax(ordereditems, user?.tax?.restaurant).gstAmount}
                   </span>
                 </div>
               ) : (
@@ -781,10 +781,10 @@ export default function OrderCard() {
                 <span>Total Amount</span>
                 <span>₹{calculateTotal(ordereditems)}</span>
                 <span>
-                  {user?.tax?.all
+                      {user?.tax?.restaurant
                     ? `₹${
                         calculateTotal(ordereditems) +
-                        calculateTax(ordereditems, user?.tax?.all).gstAmount
+                        calculateTax(ordereditems, user?.tax?.restaurant).gstAmount
                       }`
                     : `₹${calculateTotal(ordereditems)}`}
                 </span>
@@ -949,12 +949,12 @@ export default function OrderCard() {
                         </div>
                         <span className="text-sm">
                           ₹
-                          {user?.tax?.all
+                          {user?.tax?.restaurant
                             ? calculateTax(
                                 calculateTotal(ordereditems),
                                 calculateTotal(ordereditems),
                                 "restaurant",
-                                user?.tax?.all
+                                user?.tax
                               ).gstAmount
                             : 0}
                         </span>
@@ -973,12 +973,12 @@ export default function OrderCard() {
                                 className="h-3 w-3"
                                 strokeWidth={3}
                               />
-                              {user?.tax?.all
+                              {user?.tax?.restaurant
                                 ? calculateTax(
                                     calculateTotal(ordereditems),
                                     calculateTotal(ordereditems),
                                     "restaurant",
-                                    user?.tax?.all
+                                    user?.tax
                                   ).gstAmount
                                 : 0}
                             </span>
@@ -1007,10 +1007,10 @@ export default function OrderCard() {
           {/* <div className="flex items-center">
             <span className="text-sm text-muted-foreground">TOTAL</span>
             <span className="text-xl font-semibold ml-3">
-              {user?.tax?.all
+              {user?.tax?.restaurant
                 ? `₹${
                     calculateTotal(ordereditems) +
-                    calculateTax(ordereditems, user?.tax?.all).gstAmount -
+                    calculateTax(ordereditems, user?.tax?.restaurant).gstAmount -
                     (coupon?.discount || 0)
                   }`
                 : `₹${calculateTotal(ordereditems) - (coupon?.discount || 0)}`}
@@ -1022,7 +1022,7 @@ export default function OrderCard() {
             onClick={() => handlePlaceOrder()}
           >
             Pay
-            {user?.tax?.all ? (
+            {user?.tax?.restaurant ? (
               <span className="flex items-center text-sm">
                 <IndianRupee className="h-2 w-2" strokeWidth={3} />
                 {calculateTotal(ordereditems) +
@@ -1030,7 +1030,7 @@ export default function OrderCard() {
                     calculateTotal(ordereditems),
                     calculateTotal(ordereditems),
                     "restaurant",
-                    user?.tax?.all
+                    user?.tax
                   ).gstAmount -
                   (discount || 0)}
               </span>
