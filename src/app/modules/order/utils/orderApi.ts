@@ -141,10 +141,10 @@ export async function sendOrder(orderData: any, token: string, attendant: any) {
       gst: {
         gstAmount: orderData?.gstAmount,
         gstPercentage: orderData?.gstPercentage,
-        cgstAmount: "",
-        cgstPercentage: "",
-        sgstAmount: "",
-        sgstPercentage: "",
+        cgstAmount: orderData?.cgstAmount,
+        cgstPercentage: orderData?.cgstPercentage,
+        sgstAmount: orderData?.sgstAmount,
+        sgstPercentage: orderData?.sgstPercentage,
       },
       discount: [
         {
@@ -172,12 +172,12 @@ export async function sendOrder(orderData: any, token: string, attendant: any) {
       price: orderData?.orderAmount || 0,
       priceAfterDiscount: "",
       gst: {
-        gstAmount: "",
-        gstPercentage: "",
-        cgstAmount: "",
-        cgstPercentage: "",
-        sgstAmount: "",
-        sgstPercentage: "",
+        gstAmount: orderData?.gstAmount,
+        gstPercentage: orderData?.gstPercentage,
+        cgstAmount: orderData?.cgstAmount,
+        cgstPercentage: orderData?.cgstPercentage,
+        sgstAmount: orderData?.sgstAmount,
+        sgstPercentage: orderData?.sgstPercentage,
       },
       discount: [
         {
@@ -317,10 +317,10 @@ export async function sendHotelOrder(
       gst: {
         gstAmount: orderData.gstAmount,
         gstPercentage: orderData.gstPercentage,
-        cgstAmount: "",
-        cgstPercentage: "",
-        sgstAmount: "",
-        sgstPercentage: "",
+        cgstAmount: orderData.cgstAmount,
+        cgstPercentage: orderData.cgstPercentage,
+        sgstAmount: orderData.sgstAmount,
+        sgstPercentage: orderData.sgstPercentage,
       },
       discount: [
         {
@@ -348,12 +348,12 @@ export async function sendHotelOrder(
       price: orderData.orderAmount || 0,
       priceAfterDiscount: "",
       gst: {
-        gstAmount: "",
-        gstPercentage: "",
-        cgstAmount: "",
-        cgstPercentage: "",
-        sgstAmount: "",
-        sgstPercentage: "",
+        gstAmount: orderData.gstAmount,
+        gstPercentage: orderData.gstPercentage,
+        cgstAmount: orderData.cgstAmount,
+        cgstPercentage: orderData.cgstPercentage,
+        sgstAmount: orderData.sgstAmount,
+        sgstPercentage: orderData.sgstPercentage,
       },
       discount: [
         {

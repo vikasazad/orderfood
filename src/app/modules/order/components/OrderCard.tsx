@@ -275,6 +275,12 @@ export default function OrderCard() {
         if (data.isOk) {
           startTransition(async () => {
             const orderId = generateOrderId("RES", user?.tableNo);
+            const gst = calculateTax(
+              calculateTotal(ordereditems),
+              calculateTotal(ordereditems),
+              "restaurant",
+              user?.tax
+            );
             const orderData: any = {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
@@ -283,15 +289,12 @@ export default function OrderCard() {
               orderedItem: [],
               orderAmount: finalPrice,
               subtotal: calculateTotal(ordereditems),
-              gstPercentage: user?.tax.gstPercentage || "",
-              gstAmount: user?.tax.all
-                ? calculateTax(
-                    calculateTotal(ordereditems),
-                    calculateTotal(ordereditems),
-                    "restaurant",
-                    user?.tax.gstPercentage
-                  ).gstAmount
-                : "",
+              gstPercentage: gst.gstPercentage || "",
+              gstAmount: gst.gstAmount,
+              cgstAmount: gst.cgstAmount,
+              cgstPercentage: gst.cgstPercentage,
+              sgstAmount: gst.sgstAmount,
+              sgstPercentage: gst.sgstPercentage,
               contactNo: localStorage.getItem("phone") || "",
               name: "",
               email: "",
@@ -387,6 +390,12 @@ export default function OrderCard() {
           const orderId = generateOrderId("ROS", user?.tableNo);
           console.log("New Order ID:", orderId);
           console.log("first", ordereditems);
+          const gst = calculateTax(
+            calculateTotal(ordereditems),
+            calculateTotal(ordereditems),
+            "restaurant",
+            user?.tax
+          );
           const orderData: any = {
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -395,8 +404,12 @@ export default function OrderCard() {
             orderedItem: [],
             orderAmount: finalPrice,
             subtotal: calculateTotal(ordereditems),
-            gstPercentage: user?.tax.gstPercentage || "",
-            gstAmount: "",
+            gstPercentage: gst.gstPercentage || "",
+            gstAmount: gst.gstAmount,
+            cgstAmount: gst.cgstAmount,
+            cgstPercentage: gst.cgstPercentage,
+            sgstAmount: gst.sgstAmount,
+            sgstPercentage: gst.sgstPercentage,
             contactNo: "",
             name: "",
             email: "",
