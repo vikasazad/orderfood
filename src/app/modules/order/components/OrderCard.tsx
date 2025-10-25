@@ -105,9 +105,9 @@ export default function OrderCard() {
   const [isPending, startTransition] = useTransition();
   const [coupon, setCoupon] = useState<{
     code: string;
-    discount: number;
+    discount: string;
     type: string;
-    name: string;
+    amount?: number;
   } | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [isCouponDrawerOpen, setIsCouponDrawerOpen] = useState(false);
@@ -137,10 +137,10 @@ export default function OrderCard() {
         console.log("total", total);
         if (couponResult.type === "percentage") {
           setDiscount(
-            Math.round(total * (couponResult.amount.replace("%", "") / 100))
+            Math.round(total * (couponResult.discount.replace("%", "") / 100))
           );
         } else {
-          setDiscount(couponResult.amount);
+          setDiscount(couponResult.discount);
         }
         setCouponInput("");
       } else {
@@ -322,9 +322,9 @@ export default function OrderCard() {
               deliveryAddress: "",
               specialrequirements: specialRequirements,
               discountCode: coupon?.code || "",
-              discountAmount: coupon?.discount || 0,
-              discountType: "price",
-              discountDiscount: discount || 0,
+              discountAmount: discount || 0,
+              discountType: coupon?.type,
+              discountDiscount: coupon?.discount  || 0,
             };
             console.log("orderData", orderData);
 

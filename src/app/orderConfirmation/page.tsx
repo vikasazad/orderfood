@@ -19,7 +19,7 @@ export default function OrderConfirmation() {
   const dispatch = useDispatch();
   // Add useEffect to handle auto-close
   React.useEffect(() => {
-    if (finalItem && user?.tag === "concierge") {
+    if (finalItem && user?.tag === "hotel") {
       const timer = setTimeout(() => {
         window.close();
       }, 5000);
