@@ -136,7 +136,9 @@ export default function OrderCard() {
         }, 0);
         console.log("total", total);
         if (couponResult.type === "percentage") {
-          setDiscount(total * (couponResult.amount.replace("%", "") / 100));
+          setDiscount(
+            Math.round(total * (couponResult.amount.replace("%", "") / 100))
+          );
         } else {
           setDiscount(couponResult.amount);
         }
@@ -898,6 +900,7 @@ export default function OrderCard() {
                         setCouponInput(e.target.value.toUpperCase())
                       }
                       className="rounded-lg mb-2"
+                      autoFocus
                     />
                   </div>
                   <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
