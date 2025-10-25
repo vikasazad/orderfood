@@ -325,9 +325,9 @@ export async function sendHotelOrder(
       discount: [
         {
           type: orderData?.discountType || "",
-          amount: orderData?.discountAmount || "",
+          amount: orderData?.discountAmount || 0,
           code: orderData?.discountCode || "",
-          discount: orderData?.discountDiscount || 0,
+          discount: orderData?.discountDiscount || "",
         },
       ],
     },
