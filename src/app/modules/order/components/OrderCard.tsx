@@ -337,7 +337,7 @@ export default function OrderCard() {
               user?.email
             );
 
-            if (user?.tag === "concierge") {
+            if (user?.tag === "hotel") {
               await sendHotelOrder(orderData, attendant, user?.tableNo);
 
               await addKitchenOrder(
