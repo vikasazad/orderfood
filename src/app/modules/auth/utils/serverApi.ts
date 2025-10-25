@@ -29,12 +29,14 @@ export async function checkTableAvailability(email: string, tableNo: string) {
   }
 }
 
-export async function getTax(email: string) {
+export async function getTax(email: string, tag: string) {
   if (email) {
     const docRef = doc(db, email, "info");
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return docSnap.data()?.business?.gstTax?.restaurant;
+      return tag === "restaurant"
+        ? docSnap.data()?.business?.gstTax?.restaurant
+        : docSnap.data()?.business?.gstTax?.dining;
     } else {
       return false;
     }

@@ -344,10 +344,11 @@ function TokenHandler() {
               decoded.payload.email,
               decoded.payload.tableNo
             );
-            tax = await getTax(decoded.payload.email);
+            tax = await getTax(decoded.payload.email, "restaurant");
             if (!tax) {
               console.log("Tax not found");
             }
+            console.log("Tax:", tax);
             console.log("Table availability check result:", tableAvailable);
             setIsValidTable(tableAvailable);
             if (!tableAvailable) {
@@ -355,8 +356,22 @@ function TokenHandler() {
               setProgress(100);
               return;
             }
+          } else {
+            tax = await getTax(decoded.payload.email, "hotel");
+            if (!tax) {
+              console.log("Tax not found");
+            }
+            console.log("Tax:", tax);
           }
-          dispatch(addUser({ ...decoded.payload, tax: { restaurant: tax } }));
+          dispatch(
+            addUser({
+              ...decoded.payload,
+              tax: {
+                [decoded?.payload?.tag === "hotel" ? "dining" : "restaurant"]:
+                  tax,
+              },
+            })
+          );
           localStorage.setItem("token", token);
           console.log("User data and token saved to Redux");
           setProgressText("Authentication complete");

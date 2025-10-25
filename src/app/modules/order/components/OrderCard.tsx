@@ -127,18 +127,18 @@ export default function OrderCard() {
       // Mock coupon validation - in real app, this would be an API call
       const couponCode = couponInput.trim().toUpperCase();
       const couponResult = await findCoupon(couponCode);
-      // console.log("couponResult", couponResult);
+      console.log("couponResult", couponResult);
       if (couponResult) {
         setCoupon(couponResult);
         const total = ordereditems.reduce((total: any, item: any) => {
           const price = item.item.price[item.selectedType];
           return total + price * item.count;
         }, 0);
-        // console.log("total", total);
+        console.log("total", total);
         if (couponResult.type === "percentage") {
           setDiscount(total * (couponResult.amount.replace("%", "") / 100));
         } else {
-          setDiscount(couponResult.discount);
+          setDiscount(couponResult.amount);
         }
         setCouponInput("");
       } else {
@@ -150,14 +150,23 @@ export default function OrderCard() {
   // console.log("discount", discount);
   useEffect(() => {
     const total =
-      ordereditems.reduce((total, item) => {
-        const price = item.item.price[item.selectedType];
-        return total + price * item.count;
-      }, 0) - discount;
+      Math.round(
+        ordereditems.reduce((total, item) => {
+          const price = item.item.price[item.selectedType];
+          return total + price * item.count;
+        }, 0)
+      ) - discount;
     // console.log("total", total);
-    const digit = Number(user?.tax.restaurant?.all) || 0;
-    // console.log(digit);
-    const tax = Math.round((total * digit) / 100);
+    const tax =
+      Number(
+        calculateTax(
+          total,
+          total,
+          user?.tag === "hotel" ? "dining" : "restaurant",
+          user?.tax
+        ).gstAmount
+      ) || 0;
+    // console.log(tax);
 
     setfinalPrice(total + tax);
   }, [ordereditems, user, coupon]);
@@ -276,9 +285,9 @@ export default function OrderCard() {
           startTransition(async () => {
             const orderId = generateOrderId("RES", user?.tableNo);
             const gst = calculateTax(
-              calculateTotal(ordereditems),
-              calculateTotal(ordereditems),
-              "restaurant",
+              calculateTotal(ordereditems) - (discount || 0),
+              calculateTotal(ordereditems) - (discount || 0),
+              user?.tag === "hotel" ? "dining" : "restaurant",
               user?.tax
             );
             const orderData: any = {
@@ -288,7 +297,7 @@ export default function OrderCard() {
               orderSuccess: true,
               orderedItem: [],
               orderAmount: finalPrice,
-              subtotal: calculateTotal(ordereditems),
+              subtotal: calculateTotal(ordereditems) - (discount || 0),
               gstPercentage: gst.gstPercentage || "",
               gstAmount: gst.gstAmount,
               cgstAmount: gst.cgstAmount,
@@ -391,9 +400,9 @@ export default function OrderCard() {
           console.log("New Order ID:", orderId);
           console.log("first", ordereditems);
           const gst = calculateTax(
-            calculateTotal(ordereditems),
-            calculateTotal(ordereditems),
-            "restaurant",
+            calculateTotal(ordereditems) - (discount || 0),
+            calculateTotal(ordereditems) - (discount || 0),
+            user?.tag === "hotel" ? "dining" : "restaurant",
             user?.tax
           );
           const orderData: any = {
@@ -403,7 +412,7 @@ export default function OrderCard() {
             orderSuccess: false,
             orderedItem: [],
             orderAmount: finalPrice,
-            subtotal: calculateTotal(ordereditems),
+            subtotal: calculateTotal(ordereditems) - (discount || 0),
             gstPercentage: gst.gstPercentage || "",
             gstAmount: gst.gstAmount,
             cgstAmount: gst.cgstAmount,
@@ -837,8 +846,8 @@ export default function OrderCard() {
                 </p>
               </div>
               {coupon ? (
-                <div className="h-5 flex items-center justify-between w-full px-2 py-0 rounded-xl bg-pink-200/50 ">
-                  <div className="text-xs ">
+                <div className="flex items-center justify-between w-full px-2 py-1 rounded-xl bg-pink-200/50 gap-2">
+                  <div className="text-xs flex-1 flex flex-wrap items-center gap-1">
                     You saved {""}
                     <span className="text-green-500 text-md font-semibold flex items-center gap-1">
                       <IndianRupee className="h-3 w-3" strokeWidth={3} />
@@ -851,7 +860,7 @@ export default function OrderCard() {
                   </div>
                   <Button
                     variant="ghost"
-                    className="p-0 text-xs text-blue-500 underline"
+                    className="p-0 text-xs text-blue-500 underline flex-shrink-0"
                     onClick={() => {
                       setCoupon(null);
                       setDiscount(0);
@@ -885,7 +894,9 @@ export default function OrderCard() {
                     <Input
                       placeholder="Enter code"
                       value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
+                      onChange={(e) =>
+                        setCouponInput(e.target.value.toUpperCase())
+                      }
                       className="rounded-lg mb-2"
                     />
                   </div>
@@ -962,11 +973,11 @@ export default function OrderCard() {
                         </div>
                         <span className="text-sm">
                           ₹
-                          {user?.tax?.restaurant
+                          {user?.tax
                             ? calculateTax(
-                                calculateTotal(ordereditems),
-                                calculateTotal(ordereditems),
-                                "restaurant",
+                                calculateTotal(ordereditems) - (discount || 0),
+                                calculateTotal(ordereditems) - (discount || 0),
+                                user?.tag === "hotel" ? "dining" : "restaurant",
                                 user?.tax
                               ).gstAmount
                             : 0}
@@ -986,11 +997,15 @@ export default function OrderCard() {
                                 className="h-3 w-3"
                                 strokeWidth={3}
                               />
-                              {user?.tax?.restaurant
+                              {user?.tax
                                 ? calculateTax(
-                                    calculateTotal(ordereditems),
-                                    calculateTotal(ordereditems),
-                                    "restaurant",
+                                    calculateTotal(ordereditems) -
+                                      (discount || 0),
+                                    calculateTotal(ordereditems) -
+                                      (discount || 0),
+                                    user?.tag === "hotel"
+                                      ? "dining"
+                                      : "restaurant",
                                     user?.tax
                                   ).gstAmount
                                 : 0}
@@ -1035,24 +1050,10 @@ export default function OrderCard() {
             onClick={() => handlePlaceOrder()}
           >
             Pay
-            {user?.tax?.restaurant ? (
-              <span className="flex items-center text-sm">
-                <IndianRupee className="h-2 w-2" strokeWidth={3} />
-                {calculateTotal(ordereditems) +
-                  calculateTax(
-                    calculateTotal(ordereditems),
-                    calculateTotal(ordereditems),
-                    "restaurant",
-                    user?.tax
-                  ).gstAmount -
-                  (discount || 0)}
-              </span>
-            ) : (
-              <span className="flex items-center">
-                <IndianRupee className="h-2 w-2" strokeWidth={3} />
-                {calculateTotal(ordereditems) - (discount || 0)}
-              </span>
-            )}
+            <span className="flex items-center">
+              <IndianRupee className="h-2 w-2" strokeWidth={3} />
+              {finalPrice}
+            </span>
           </Button>
         </div>
       </div>
@@ -1072,6 +1073,7 @@ export default function OrderCard() {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 className="rounded-xl "
+                autoFocus
               />
             )}
             {stage === "otp" && (
