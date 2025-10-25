@@ -240,49 +240,8 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    // setPhoneDrawerOpen(true);
-const orderId = generateOrderId("RES", user?.tableNo);
-            const gst = calculateTax(
-              calculateTotal(ordereditems) - (discount || 0),
-              calculateTotal(ordereditems) - (discount || 0),
-              user?.tag === "hotel" ? "dining" : "restaurant",
-              user?.tax
-            );
-            const orderData: any = {
-              // razorpayOrderId: response.razorpay_order_id,
-              // razorpayPaymentId: response.razorpay_payment_id,
-              orderId: orderId,
-              orderSuccess: true,
-              orderedItem: [],
-              orderAmount: finalPrice,
-              subtotal: calculateTotal(ordereditems) - (discount || 0),
-              gstPercentage: gst.gstPercentage || "",
-              gstAmount: gst.gstAmount,
-              cgstAmount: gst.cgstAmount,
-              cgstPercentage: gst.cgstPercentage,
-              sgstAmount: gst.sgstAmount,
-              sgstPercentage: gst.sgstPercentage,
-              contactNo: localStorage.getItem("phone") || "",
-              name: "",
-              email: "",
-              problemFood: "",
-              problemService: "",
-              timeOfOrder: new Date().toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
-              timeOfService: "",
-              tableNo: user?.tableNo,
-              estimatedDeliveryTime: "",
-              deliveryAddress: "",
-              specialrequirements: specialRequirements,
-              discountCode: coupon?.code || "",
-              discountAmount: discount || 0,
-              discountType: coupon?.type,
-              discountDiscount: coupon?.discount  || 0,
-            };
-            console.log("orderData", orderData);
+    setPhoneDrawerOpen(true);
+
     // setLoadScript(true);
     // createOrder();
     // router.push("/Detail");
