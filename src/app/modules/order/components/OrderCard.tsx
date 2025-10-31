@@ -382,7 +382,7 @@ export default function OrderCard() {
             //   "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
             // );
 
-            router.push("/orderConfirmation");
+            window.location.href = "/orderConfirmation";
           });
         } else {
           const orderId = generateOrderId("ROS", user?.tableNo);

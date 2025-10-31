@@ -19,18 +19,21 @@ export default function OrderConfirmation() {
   const dispatch = useDispatch();
   // Add useEffect to handle auto-close
   React.useEffect(() => {
-    if (finalItem && user?.tag === "hotel") {
-      dispatch(clearCart());
-      const timer = setTimeout(() => {
-        window.close();
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    } else {
+    // if (finalItem && user?.tag === "hotel") {
+    dispatch(clearCart());
+    const timer = setTimeout(() => {
       router.push("/");
       dispatch(clearCart());
       toast.success("Order Placed Successfully!");
-    }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+    // }
+    // else {
+    //   router.push("/");
+    //   dispatch(clearCart());
+    //   toast.success("Order Placed Successfully!");
+    // }
   }, [finalItem, user]);
 
   // const copyToClipboard = (text: string, label: string) => {
