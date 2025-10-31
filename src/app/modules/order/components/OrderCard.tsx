@@ -324,7 +324,7 @@ export default function OrderCard() {
               discountCode: coupon?.code || "",
               discountAmount: discount || 0,
               discountType: coupon?.type,
-              discountDiscount: coupon?.discount  || 0,
+              discountDiscount: coupon?.discount || 0,
             };
             console.log("orderData", orderData);
 
@@ -339,50 +339,37 @@ export default function OrderCard() {
 
             if (user?.tag === "hotel") {
               await sendHotelOrder(orderData, attendant, user?.tableNo);
-
-              await addKitchenOrder(
-                user?.email,
-                generateOrderId("RES", user?.tableNo),
-                user?.name,
-                ordereditems.map((er: any) => {
-                  return createOrderData(er);
-                }),
-                finalPrice,
-                attendant?.name,
-                attendant?.contact
-              );
             } else {
               await sendOrder(orderData, token, attendant);
-              await addKitchenOrder(
-                user?.email,
-                generateOrderId("RES", user?.tableNo),
-                user?.name || "Guest",
-                ordereditems.map((er: any) => {
-                  return createOrderData(er);
-                }),
-                finalPrice,
-                attendant?.name,
-                attendant?.contact
-              );
-              if (localStorage.getItem("phone")) {
-                console.log("user?.phone", localStorage.getItem("phone"));
-                await sendWhatsAppMessage(localStorage.getItem("phone") || "", [
-                  orderId,
-                  `T-${user?.tableNo}`,
-                  "Wah Bhai Wah",
-                ]);
-              }
-
-              await sendStaffAssignmentRequest(
-                attendant?.name,
-                attendant?.contact,
-                orderId,
-                user?.name || "Guest",
-                user?.tableNo,
-                "table"
-              );
-              // we need to also send message to the staff via whatsapp
             }
+            await addKitchenOrder(
+              user?.email,
+              orderId,
+              user?.name || "Guest",
+              ordereditems.map((er: any) => {
+                return createOrderData(er);
+              }),
+              finalPrice,
+              attendant?.name,
+              attendant?.contact
+            );
+            if (localStorage.getItem("phone")) {
+              console.log("user?.phone", localStorage.getItem("phone"));
+              await sendWhatsAppMessage(localStorage.getItem("phone") || "", [
+                orderId,
+                `T-${user?.tableNo}`,
+                "Wah Bhai Wah",
+              ]);
+            }
+
+            await sendStaffAssignmentRequest(
+              attendant?.name,
+              attendant?.contact,
+              orderId,
+              user?.name || "Guest",
+              user?.tableNo,
+              "table"
+            );
 
             await updateOrdersForAttendant(attendant?.name, orderId);
             if (user?.tag === "restaurant") {

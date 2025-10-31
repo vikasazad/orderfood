@@ -20,6 +20,7 @@ export default function OrderConfirmation() {
   // Add useEffect to handle auto-close
   React.useEffect(() => {
     if (finalItem && user?.tag === "hotel") {
+      dispatch(clearCart());
       const timer = setTimeout(() => {
         window.close();
       }, 5000);

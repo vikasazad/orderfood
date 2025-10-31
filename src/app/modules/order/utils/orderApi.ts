@@ -314,6 +314,7 @@ export async function sendHotelOrder(
       price: orderData.orderAmount || 0,
       priceAfterDiscount: "",
       timeOfTransaction: new Date().toISOString(),
+      totalPrice: orderData.orderAmount || 0,
       gst: {
         gstAmount: orderData.gstAmount,
         gstPercentage: orderData.gstPercentage,
@@ -347,6 +348,7 @@ export async function sendHotelOrder(
       timeOfTransaction: new Date().toISOString(),
       price: orderData.orderAmount || 0,
       priceAfterDiscount: "",
+      totalPrice: orderData.orderAmount || 0,
       gst: {
         gstAmount: orderData.gstAmount,
         gstPercentage: orderData.gstPercentage,
@@ -382,7 +384,7 @@ export async function sendHotelOrder(
 
           // Add the new order to diningDetails.orders
           room.diningDetails.orders = [
-            ...(room.diningDetails.orders || []),
+            ...(room.diningDetails?.orders || []),
             newOrder,
           ];
 
