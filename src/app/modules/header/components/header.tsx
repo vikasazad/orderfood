@@ -378,8 +378,6 @@ export default function Header({ data }: { data: any }) {
                                 </div>
                               </div>
 
-
-                              
                               <div className="flex justify-between items-center pt-2 border-t">
                                 <span className="text-xs font-semibold text-muted-foreground">
                                   Savings using{" "}
@@ -582,13 +580,13 @@ export default function Header({ data }: { data: any }) {
           <div
             className={cn(
               "relative flex items-center gap-2 rounded-full bg-background transition-all duration-500 shadow-md hover:shadow-lg",
-              expanded ? "w-[85%] px-3" : "h-10 w-10"
+              expanded ? "w-[85%] px-3 h-10" : "h-10 w-10"
             )}
           >
             <Input
               className={cn(
                 "border-none bg-transparent p-0 focus-visible:ring-0",
-                expanded ? "w-full h-6 opacity-100" : "w-0 opacity-0"
+                expanded ? "w-full h-10 opacity-100" : "w-0 opacity-0"
               )}
               placeholder="Search anything"
               type="search"

@@ -93,7 +93,7 @@ export default function Footer({ data }: { data: any }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white bg-white/20 hover:text-white hover:bg-white/20"
+                className="text-white bg-white/40 hover:text-white hover:bg-white/20"
               >
                 <MoveRight className="h-6 w-6" />
               </Button>

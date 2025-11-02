@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Info,
   IndianRupee,
+  CircleHelp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -88,7 +89,7 @@ export default function OrderCard() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.addToOrderData);
-  // console.log("user", user);
+  console.log("user", user);
   const ordereditems = useSelector(
     (state: RootState) => state.addToOrderData.addToOrderData
   );
@@ -115,7 +116,9 @@ export default function OrderCard() {
   const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = useState(false);
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFinalLoading, setIsFinalLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
@@ -123,18 +126,19 @@ export default function OrderCard() {
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
 
   const handleCouponApply = async () => {
+    setIsCouponLoading(true);
     if (couponInput.trim()) {
       // Mock coupon validation - in real app, this would be an API call
       const couponCode = couponInput.trim().toUpperCase();
       const couponResult = await findCoupon(couponCode);
-      console.log("couponResult", couponResult);
+      // console.log("couponResult", couponResult);
       if (couponResult) {
         setCoupon(couponResult);
         const total = ordereditems.reduce((total: any, item: any) => {
           const price = item.item.price[item.selectedType];
           return total + price * item.count;
         }, 0);
-        console.log("total", total);
+        // console.log("total", total);
         if (couponResult.type === "percentage") {
           setDiscount(
             Math.round(total * (couponResult.discount.replace("%", "") / 100))
@@ -148,6 +152,7 @@ export default function OrderCard() {
       }
     }
     setIsCouponDrawerOpen(false);
+    setIsCouponLoading(false);
   };
   // console.log("discount", discount);
   useEffect(() => {
@@ -194,7 +199,7 @@ export default function OrderCard() {
   };
 
   const addItemWithPortion = (item: any) => {
-    console.log("item", item);
+    // console.log("item", item);
     if (activeItem && selectedPortion) {
       dispatch(
         addData({
@@ -208,7 +213,7 @@ export default function OrderCard() {
   };
 
   const handleSpecialRequestsOpen = () => {
-    console.log("specialRequirements");
+    // console.log("specialRequirements");
     setTempSpecialRequirements(specialRequirements);
     setIsSpecialRequestsOpen(true);
   };
@@ -221,6 +226,7 @@ export default function OrderCard() {
   const handleSpecialRequestsClear = () => {
     setTempSpecialRequirements("");
     setSpecialRequirements("");
+    setIsSpecialRequestsOpen(false);
   };
   function generateOrderId(restaurantCode: string, tableNo: string) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
@@ -240,7 +246,16 @@ export default function OrderCard() {
   };
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    setPhoneDrawerOpen(true);
+    setIsFinalLoading(true);
+    if (user?.phone) {
+      const res = await handlePhoneSubmit(user?.phone);
+      if (res) {
+        setPhoneDrawerOpen(true);
+      }
+    } else {
+      setPhoneDrawerOpen(true);
+    }
+    // setPhoneDrawerOpen(true);
 
     // setLoadScript(true);
     // createOrder();
@@ -381,7 +396,7 @@ export default function OrderCard() {
             //   "New Order Received",
             //   "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
             // );
-
+            setIsFinalLoading(false);
             window.location.href = "/orderConfirmation";
           });
         } else {
@@ -429,6 +444,7 @@ export default function OrderCard() {
           });
           dispatch(setFinalOrder(orderData));
           console.log(orderData);
+          setIsFinalLoading(false);
           router.push("/orderConfirmation");
           alert("Payment failed");
         }
@@ -439,12 +455,12 @@ export default function OrderCard() {
     payment.open();
   };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handlePhoneSubmit = async (phone?: string) => {
     setIsLoading(true);
-    e.preventDefault();
 
     try {
-      const formattedNumber = `+${91}${phoneNumber}`;
+      const formattedNumber =
+        phone?.length === 10 ? `+${91}${phone}` : `+${91}${phoneNumber}`;
       console.log("Formatted phone number:", formattedNumber);
       console.log("Sending OTPs to email and phone...");
       setFNumber(formattedNumber);
@@ -455,10 +471,12 @@ export default function OrderCard() {
       startCountdown(); // Start countdown here
 
       setIsLoading(false);
+      return true;
     } catch (error) {
       setIsLoading(false);
       toast.error("Something went wrong");
       console.error("Error in handleRegisterSubmit:", error);
+      return false;
     }
   };
 
@@ -526,7 +544,13 @@ export default function OrderCard() {
   return (
     <>
       <div id="recaptcha-container" />
-      <div className=" border-b border-[#f0f0f0] rounded-bl-3xl p-2 box-shadow-lg">
+      <div
+        className="border-b border-[#f0f0f0] rounded-bl-3xl p-2"
+        style={{
+          boxShadow:
+            "rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px",
+        }}
+      >
         <div
           className="ml-2 w-7 h-8 border-2 border-muted rounded-lg box-shadow-lg flex items-center justify-center"
           onClick={() => router.back()}
@@ -693,7 +717,7 @@ export default function OrderCard() {
 
             <div>
               <div
-                className="flex items-center justify-between w-full p-3 border border-input bg-[#f0f0f0] rounded-xl cursor-pointer "
+                className="flex items-center justify-between w-full p-3 border border-input  rounded-xl cursor-pointer "
                 onClick={() => {
                   handleSpecialRequestsOpen();
                 }}
@@ -759,14 +783,7 @@ export default function OrderCard() {
                     </div>
 
                     <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={handleSpecialRequestsAdd}
-                          className="flex-1 bg-green-200 hover:bg-green-300 text-green-800"
-                        >
-                          ADD
-                        </Button>
-                      </div>
+                      <Button onClick={handleSpecialRequestsAdd}>ADD</Button>
                     </DrawerFooter>
                   </div>
                 </DrawerContent>
@@ -804,7 +821,7 @@ export default function OrderCard() {
           </CardContent>
         </Card>
 
-        <Card className="mt-4 rounded-3xl mb-12">
+        <Card className="mt-4 rounded-3xl mb-[100px]">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-bold">Payment Details</h1>
@@ -826,8 +843,9 @@ export default function OrderCard() {
                 {/* I can minus the discount amount here */}
               </div>
               <div className="flex items-center justify-between w-full">
-                <p className="text-xs font-semibold">
-                  Total savings with discount
+                <p className="flex items-center gap-1 text-xs font-semibold">
+                  Total savings with discount{" "}
+                  <CircleHelp className="h-4 w-4 cursor-pointer text-cyan-500" />
                 </p>
                 <p className="text-xs text-green-500 font-medium flex items-center gap-1">
                   -<IndianRupee className="h-3 w-3" strokeWidth={3} />
@@ -891,8 +909,15 @@ export default function OrderCard() {
                     />
                   </div>
                   <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
-                    <Button className="flex-1" onClick={handleCouponApply}>
+                    <Button
+                      className="flex-1"
+                      onClick={handleCouponApply}
+                      disabled={isCouponLoading}
+                    >
                       Apply
+                      {isCouponLoading && (
+                        <Icons.spinner className="ml-2 h-4 w-4 animate-spin" />
+                      )}
                     </Button>
                   </DrawerFooter>
                 </DrawerContent>
@@ -1038,12 +1063,16 @@ export default function OrderCard() {
           <Button
             className="w-full font-semibold py-6 rounded-xl"
             onClick={() => handlePlaceOrder()}
+            disabled={isFinalLoading}
           >
             Pay
             <span className="flex items-center">
               <IndianRupee className="h-2 w-2" strokeWidth={3} />
               {finalPrice}
             </span>
+            {isFinalLoading && (
+              <Icons.spinner className="ml-2 h-4 w-4 animate-spin" />
+            )}
           </Button>
         </div>
       </div>
@@ -1097,8 +1126,12 @@ export default function OrderCard() {
                       variant="ghost"
                       className="h-6 text-sm text-blue-500 py-0"
                       onClick={handleResendOtp}
+                      disabled={isLoading}
                     >
-                      Resend OTP
+                      {isLoading ? "Resending OTP..." : "Resend OTP"}
+                      {isLoading && (
+                        <Icons.spinner className="ml-2 h-4 w-4 animate-spin" />
+                      )}
                     </Button>
                   )}
                 </div>
@@ -1109,11 +1142,14 @@ export default function OrderCard() {
           <DrawerFooter className="px-3 py-2 bg-background rounded-2xl ">
             <Button
               className="flex-1 py-3 rounded-2xl"
-              onClick={stage === "phone" ? handlePhoneSubmit : handleOtpSubmit}
+              onClick={() =>
+                stage === "phone" ? handlePhoneSubmit() : handleOtpSubmit()
+              }
+              disabled={isLoading}
             >
               {stage === "phone" ? "Continue" : "Verify"}
               {isLoading && (
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.spinner className="ml-2 h-4 w-4 animate-spin" />
               )}
             </Button>
           </DrawerFooter>

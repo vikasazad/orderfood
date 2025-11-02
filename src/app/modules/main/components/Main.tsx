@@ -48,9 +48,7 @@ const Main = () => {
         <div className="text-center">
           <div className="text-lg font-medium">Loading...</div>
           <div className="text-sm text-gray-500 mt-2">
-            {!localStorage.getItem("token")
-              ? "Checking authentication..."
-              : "Loading menu..."}
+            {!localStorage.getItem("token") ? "Checking authentication..." : ""}
           </div>
         </div>
       </div>
