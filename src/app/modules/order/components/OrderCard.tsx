@@ -256,7 +256,7 @@ export default function OrderCard() {
       setPhoneDrawerOpen(true);
     }
     // setPhoneDrawerOpen(true);
-
+    // setStage("otp");
     // setLoadScript(true);
     // createOrder();
     // router.push("/Detail");
@@ -449,6 +449,41 @@ export default function OrderCard() {
           alert("Payment failed");
         }
       },
+      modal: {
+        ondismiss: function () {
+          // Code to run when the checkout form is closed by the user
+          console.log("Checkout form closed");
+          setIsFinalLoading(false);
+
+          // Clean up reCAPTCHA verifier
+          // if (window.recaptchaVerifier) {
+          //   console.log("Clearing recaptcha verifier");
+          //   try {
+          //     window.recaptchaVerifier.clear();
+          //   } catch (error) {
+          //     console.log("Error clearing recaptcha:", error);
+          //   }
+          //   window.recaptchaVerifier = null;
+          // }
+
+          // // Remove and recreate reCAPTCHA container to fully reset it
+          // const recaptchaContainer = document.getElementById(
+          //   "recaptcha-container"
+          // );
+          // if (recaptchaContainer && recaptchaContainer.parentNode) {
+          //   const parent = recaptchaContainer.parentNode;
+          //   const newContainer = document.createElement("div");
+          //   newContainer.id = "recaptcha-container";
+          //   parent.replaceChild(newContainer, recaptchaContainer);
+          // }
+
+          // // Remove reCAPTCHA badge if present
+          // const recaptchaBadge = document.querySelector(".grecaptcha-badge");
+          // if (recaptchaBadge && recaptchaBadge.parentNode) {
+          //   recaptchaBadge.parentNode.removeChild(recaptchaBadge);
+          // }
+        },
+      },
     };
 
     const payment = new (window as any).Razorpay(paymentData);
@@ -501,7 +536,7 @@ export default function OrderCard() {
       localStorage.setItem("phone", fNumber);
       // const newUser = { ...user, phone: fNumber };
       // dispatch(setUser(newUser));
-      setPhoneDrawerOpen(false);
+
       setStage("phone");
       setOtp("");
       setPhoneNumber("");
@@ -509,6 +544,8 @@ export default function OrderCard() {
       setIsLoading(false);
       setLoadScript(true);
       createOrder();
+      setPhoneDrawerOpen(false);
+      setIsFinalLoading(false);
       // Use replace to prevent back navigation to login
       // document.body.focus();
       // router.push("/");
@@ -544,13 +581,7 @@ export default function OrderCard() {
   return (
     <>
       <div id="recaptcha-container" />
-      <div
-        className="border-b border-[#f0f0f0] rounded-bl-3xl p-2"
-        style={{
-          boxShadow:
-            "rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px",
-        }}
-      >
+      <div className="border-b border-[#f0f0f0] rounded-bl-3xl p-2 [box-shadow:var(--shadow-s)]">
         <div
           className="ml-2 w-7 h-8 border-2 border-muted rounded-lg box-shadow-lg flex items-center justify-center"
           onClick={() => router.back()}
@@ -576,10 +607,10 @@ export default function OrderCard() {
           />
         )}
 
-        <Card className="relative rounded-3xl">
+        <Card className="relative rounded-3xl [box-shadow:var(--shadow-s)]">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold">Order</h1>
+              <h1 className="text-lg font-medium">Order</h1>
 
               <HandPlatter className="h-6 w-6" />
             </div>
@@ -608,7 +639,7 @@ export default function OrderCard() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-medium text-sm">{item.item.name}</h3>
+                    <h3 className="font-bold text-sm">{item.item.name}</h3>
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-muted-foreground">
                         {item.selectedType}
@@ -622,7 +653,7 @@ export default function OrderCard() {
                   </div>
                 </div>
                 <div className="text-right ">
-                  <div className="inline-flex items-center rounded-md bg-white border border-grey">
+                  <div className="inline-flex  items-center text-white rounded-md [background:var(--bg-red)] [box-shadow:var(--shadow-s)]">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -717,7 +748,7 @@ export default function OrderCard() {
 
             <div>
               <div
-                className="flex items-center justify-between w-full p-3 border border-input  rounded-xl cursor-pointer "
+                className="flex items-center justify-between w-full p-3 border border-input  rounded-xl cursor-pointer [box-shadow:var(--shadow-s)]"
                 onClick={() => {
                   handleSpecialRequestsOpen();
                 }}
@@ -782,8 +813,14 @@ export default function OrderCard() {
                       </div>
                     </div>
 
-                    <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
-                      <Button onClick={handleSpecialRequestsAdd}>ADD</Button>
+                    <DrawerFooter className="px-3 py-4 rounded-2xl">
+                      <Button
+                        onClick={handleSpecialRequestsAdd}
+                        disabled={tempSpecialRequirements.length < 5}
+                        className="bg-[#FF8080] text-white [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
+                      >
+                        ADD
+                      </Button>
                     </DrawerFooter>
                   </div>
                 </DrawerContent>
@@ -821,7 +858,7 @@ export default function OrderCard() {
           </CardContent>
         </Card>
 
-        <Card className="mt-4 rounded-3xl mb-[100px]">
+        <Card className="mt-4 rounded-3xl mb-[100px] [box-shadow:var(--shadow-s)]">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-bold">Payment Details</h1>
@@ -836,31 +873,33 @@ export default function OrderCard() {
           <CardContent className="pt-2 pb-4 px-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between w-full">
-                <p className="text-xs font-semibold">To Pay</p>
-                <p className="text-xs flex items-center ">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  To Pay
+                </p>
+                <p className="text-xs flex items-center font-bold">
                   <IndianRupee className="h-3 w-3" /> {finalPrice}
                 </p>
                 {/* I can minus the discount amount here */}
               </div>
               <div className="flex items-center justify-between w-full">
-                <p className="flex items-center gap-1 text-xs font-semibold">
-                  Total savings with discount{" "}
-                  <CircleHelp className="h-4 w-4 cursor-pointer text-cyan-500" />
+                <p className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                  Total savings with discount
+                  <CircleHelp className="h-4 w-4 cursor-pointer text-[#FF8080]" />
                 </p>
-                <p className="text-xs text-green-500 font-medium flex items-center gap-1">
+                <p className="text-xs text-green-500 font-bold flex items-center gap-1">
                   -<IndianRupee className="h-3 w-3" strokeWidth={3} />
                   {discount || 0}
                 </p>
               </div>
               {coupon ? (
-                <div className="flex items-center justify-between w-full px-2 py-1 rounded-xl bg-pink-200/50 gap-2">
+                <div className="flex items-center justify-between w-full px-2 py-1 rounded-xl bg-pink-200/50 gap-2 [box-shadow:var(--shadow-s)]">
                   <div className="text-xs flex-1 flex flex-wrap items-center gap-1">
-                    You saved {""}
+                    You saved
                     <span className="text-green-500 text-md font-semibold flex items-center gap-1">
                       <IndianRupee className="h-3 w-3" strokeWidth={3} />
                       {discount}
-                    </span>{" "}
-                    with{" "}
+                    </span>
+                    with
                     <span className="text-blue-500 text-md font-semibold">
                       {coupon.code}
                     </span>
@@ -878,7 +917,7 @@ export default function OrderCard() {
                 </div>
               ) : (
                 <div
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-muted-foreground cursor-pointer "
                   onClick={() => setIsCouponDrawerOpen(true)}
                 >
                   Apply Coupon
@@ -910,9 +949,9 @@ export default function OrderCard() {
                   </div>
                   <DrawerFooter className="px-3 py-4  bg-background rounded-2xl">
                     <Button
-                      className="flex-1"
+                      className="flex-1 bg-[#FF8080] text-white [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
                       onClick={handleCouponApply}
-                      disabled={isCouponLoading}
+                      disabled={isCouponLoading || couponInput.length < 4}
                     >
                       Apply
                       {isCouponLoading && (
@@ -929,18 +968,18 @@ export default function OrderCard() {
               >
                 <DrawerContent className="rounded-t-2xl bg-[#f0f0f0]">
                   <DrawerDescription></DrawerDescription>
-                  <DrawerHeader className="text-left pb-2 pt-1">
-                    <DrawerTitle className="text-sm font-semibold">
+                  <DrawerHeader className="text-left pb-0 pt-1 ">
+                    <DrawerTitle className="text-lg font-semibold">
                       Payment Details
                     </DrawerTitle>
                   </DrawerHeader>
 
-                  <div className="mx-3 px-4 pb-4 py-3 space-y-4 bg-white rounded-2xl">
+                  <div className="m-3 px-4 pb-4 py-3 space-y-4 bg-white rounded-2xl [box-shadow:var(--shadow-s)]">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-light">
+                      <span className="text-xs  text-muted-foreground">
                         Item amount({ordereditems.length})
                       </span>
-                      <span className="text-xs font-semibold flex items-center gap-1">
+                      <span className="text-xs font-bold flex items-center gap-1">
                         <IndianRupee className="h-3 w-3" strokeWidth={3} />{" "}
                         {calculateTotal(ordereditems)}
                       </span>
@@ -951,7 +990,7 @@ export default function OrderCard() {
                         <span className="text-xs text-green-600">
                           Savings with {coupon.code}
                         </span>
-                        <span className="text-xs text-green-600 flex items-center gap-1">
+                        <span className="text-xs text-green-600 font-bold flex items-center gap-1">
                           - <IndianRupee className="h-3 w-3" strokeWidth={3} />
                           {discount}
                         </span>
@@ -959,7 +998,7 @@ export default function OrderCard() {
                     )}
 
                     {coupon && (
-                      <div className="flex justify-between items-center bg-pink-50 p-2 rounded-lg">
+                      <div className="flex justify-between items-center bg-pink-200/50 p-2 rounded-lg [box-shadow:var(--shadow-s)]">
                         <span className="text-xs">{coupon.code} Applied</span>
                         <Trash2
                           className="h-3 w-3 cursor-pointer"
@@ -967,13 +1006,16 @@ export default function OrderCard() {
                             setCoupon(null);
                             setDiscount(0);
                           }}
+                          strokeWidth={3}
                         />
                       </div>
                     )}
 
                     <div className="flex justify-between items-center font-medium">
-                      <span className="text-xs">Sub Total</span>
-                      <span className="text-xs flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">
+                        Sub Total
+                      </span>
+                      <span className="text-xs font-bold flex items-center gap-1">
                         <IndianRupee className="h-3 w-3" strokeWidth={3} />
                         {calculateTotal(ordereditems) - (discount || 0)}
                       </span>
@@ -981,13 +1023,15 @@ export default function OrderCard() {
                     <Popover>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs">Taxes and charges</span>
+                          <span className="text-xs text-muted-foreground">
+                            Taxes and charges
+                          </span>
                           <PopoverTrigger>
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </PopoverTrigger>
                         </div>
-                        <span className="text-sm">
-                          ₹
+                        <span className="text-xs font-bold flex items-center gap-1">
+                          <IndianRupee className="h-3 w-3" strokeWidth={3} />
                           {user?.tax
                             ? calculateTax(
                                 calculateTotal(ordereditems) - (discount || 0),
@@ -1061,7 +1105,7 @@ export default function OrderCard() {
           </div> */}
 
           <Button
-            className="w-full font-semibold py-6 rounded-xl"
+            className="w-full font-semibold py-6  bg-[#FF8080] text-white [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
             onClick={() => handlePlaceOrder()}
             disabled={isFinalLoading}
           >
@@ -1081,8 +1125,21 @@ export default function OrderCard() {
           <DrawerDescription></DrawerDescription>
 
           <DrawerHeader>
-            <DrawerTitle></DrawerTitle>
-            {stage === "phone" ? "Enter your phone number" : "Enter  OTP"}
+            <DrawerTitle>
+              {stage === "phone" ? (
+                "Enter your phone number"
+              ) : (
+                <div className="flex flex-col gap-1 ">
+                  <span className="text-md font-bold">Verify with OTP</span>
+                  <span className="text-xs text-muted-foreground tracking-wide">
+                    Sent via SMS to {user?.phone}
+                  </span>
+                  {/* <span className="text-xs text-[#FF8080] tracking-wide ">
+                    Change number?
+                  </span> */}
+                </div>
+              )}
+            </DrawerTitle>
           </DrawerHeader>
 
           <div className="space-y-4 px-3 py-2">
@@ -1141,7 +1198,7 @@ export default function OrderCard() {
 
           <DrawerFooter className="px-3 py-2 bg-background rounded-2xl ">
             <Button
-              className="flex-1 py-3 rounded-2xl"
+              className="flex-1 py-3  bg-[#FF8080] text-white [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
               onClick={() =>
                 stage === "phone" ? handlePhoneSubmit() : handleOtpSubmit()
               }
@@ -1219,7 +1276,7 @@ export default function OrderCard() {
           </Button>
         </div>
       </DrawerFooter>
-    </div>
+    </div>  
   </DrawerContent>
 </Drawer>; */
 // }

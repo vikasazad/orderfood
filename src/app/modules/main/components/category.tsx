@@ -49,14 +49,14 @@ export default function Category({ data }: { data: Category[] }) {
                     key={category.id}
                     className={cn(
                       "flex-shrink-0 cursor-pointer",
-                      "rounded-lg transition-colors hover:bg-accent"
+                      "rounded-lg transition-colors hover:bg-accent "
                     )}
                     onClick={() => {
                       dispatch(setActiveItem(globalIndex));
                     }}
                   >
                     <div className="flex flex-col items-center space-y-2">
-                      <Avatar className="h-20 w-20">
+                      <Avatar className="h-20 w-20 [box-shadow:var(--shadow-m)]">
                         <AvatarImage
                           src={category.categoryLogo}
                           alt={category.name}

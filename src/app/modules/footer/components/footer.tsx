@@ -34,14 +34,13 @@ export default function Footer({ data }: { data: any }) {
                 dispatch(setActiveItem(index));
               }}
               className={cn(
-                "px-4 py-2 text-sm whitespace-nowrap transition-colors",
-                activeCategory === index && "bg-muted rounded-md"
+                "px-4 py-2 text-sm whitespace-nowrap transition-colors ",
+                activeCategory === index &&
+                  "bg-[#FF8080] rounded-md text-white [box-shadow:var(--shadow-s)]"
               )}
             >
               {category.name}
-              <span className="ml-2 text-xs text-muted-foreground">
-                {category.menuItems.length}
-              </span>
+              <span className="ml-2 text-xs ">{category.menuItems.length}</span>
             </button>
           ))}
           <div className="sticky right-[-19px] ml-auto pl-4 bg-gradient-to-l from-white via-white">
@@ -49,7 +48,7 @@ export default function Footer({ data }: { data: any }) {
               <PopoverTrigger asChild>
                 <Button
                   variant="default"
-                  className="rounded-[15% 150% 150% 15% / 50% 0% 0% 50%] rounded-r-none shadow-[rgb(255 254 254 / 87%) -15px 0px 8px 2px]"
+                  className="rounded-[15% 150% 150% 15% / 50% 0% 0% 50%] rounded-r-none [box-shadow:var(--shadow-m)]"
                 >
                   <Utensils className="mr-1 h-4 w-4" />
                   Menu
@@ -84,7 +83,7 @@ export default function Footer({ data }: { data: any }) {
       </div>
 
       {ordereditems.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white px-4 py-3 animate-in fade-in slide-in-from-bottom duration-500">
+        <div className="bg-gradient-to-r from-red-300 to-[#FF8080] text-white px-4 py-3 animate-in fade-in slide-in-from-bottom duration-500">
           <div className="flex items-center justify-center gap-2">
             <div className="text-lg font-medium">
               {ordereditems.length} Item added

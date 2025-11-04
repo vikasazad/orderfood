@@ -97,13 +97,16 @@ export default function Component({ data = [] }: { data?: any[] }) {
                 (item.portion ? item.portion.split("/")[0] : "Single");
 
               return (
-                <Card className="w-full max-w-2xl mx-auto my-5" key={item.id}>
+                <Card
+                  className="w-full max-w-2xl mx-auto my-5 [box-shadow:var(--shadow-s)]"
+                  key={item.id}
+                >
                   <CardContent className="p-0">
-                    <Carousel className="w-full">
+                    <Carousel className="w-full [box-shadow:var(--shadow-s)] rounded-lg">
                       <CarouselContent>
                         {item.images.map((image: string, index: number) => (
                           <CarouselItem key={index}>
-                            <div className="relative aspect-[6/3] w-full overflow-hidden rounded-lg">
+                            <div className="relative aspect-[6/3] w-full overflow-hidden rounded-lg ">
                               <Image
                                 src={image}
                                 alt={item.name}
@@ -154,7 +157,7 @@ export default function Component({ data = [] }: { data?: any[] }) {
                               <ToggleGroupItem
                                 key={size}
                                 value={size}
-                                className="px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                                className="px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:[box-shadow:var(--shadow-m)] data-[state=off]:[box-shadow:var(--shadow-inset)]"
                               >
                                 {size}
                               </ToggleGroupItem>
@@ -164,7 +167,7 @@ export default function Component({ data = [] }: { data?: any[] }) {
                       </div>
 
                       <Button
-                        className="w-full text-lg py-6 bg-[#FF8080]"
+                        className="w-full text-lg py-6 bg-[#FF8080] [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
                         size="lg"
                         disabled={addedItemIds.includes(item.id)}
                         onClick={() => handleAddToOrder(item, selectedPortion)}

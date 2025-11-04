@@ -30,6 +30,7 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@reduxjs/toolkit": "^2.3.0",
+    "@types/grecaptcha": "^3.0.9",
     "apexcharts": "^3.54.1",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
