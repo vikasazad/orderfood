@@ -82,7 +82,7 @@ const useCountdown = (initialCount: number) => {
     }
   }, [count]);
 
-  return [count, startCountdown] as const;
+  return [count, startCountdown, setCount] as const;
 };
 
 export default function OrderCard() {
@@ -122,7 +122,7 @@ export default function OrderCard() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
-  const [count, startCountdown] = useCountdown(30);
+  const [count, startCountdown, setCount] = useCountdown(30);
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
 
   const handleCouponApply = async () => {
@@ -156,6 +156,7 @@ export default function OrderCard() {
   };
   // console.log("discount", discount);
   useEffect(() => {
+    // setIsFinalLoading(false);
     const total =
       Math.round(
         ordereditems.reduce((total, item) => {
@@ -244,10 +245,11 @@ export default function OrderCard() {
     };
     return object;
   };
+
   const handlePlaceOrder = async () => {
     console.log("clicked");
     setIsFinalLoading(true);
-    if (user?.phone) {
+    if (user?.phone && stage === "phone") {
       const res = await handlePhoneSubmit(user?.phone);
       if (res) {
         setPhoneDrawerOpen(true);
@@ -397,7 +399,7 @@ export default function OrderCard() {
             //   "Hi [Waiter Name], a new order has been placed at Table [Table Number]. Please review the details and ensure prompt service. Thank you!"
             // );
             setIsFinalLoading(false);
-            window.location.href = "/orderConfirmation";
+            router.push("/orderConfirmation");
           });
         } else {
           const orderId = generateOrderId("ROS", user?.tableNo);
@@ -504,7 +506,6 @@ export default function OrderCard() {
       setVerificationId(phoneOtpRes.verificationId);
       setStage("otp");
       startCountdown(); // Start countdown here
-
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -545,7 +546,6 @@ export default function OrderCard() {
       setLoadScript(true);
       createOrder();
       setPhoneDrawerOpen(false);
-      setIsFinalLoading(false);
       // Use replace to prevent back navigation to login
       // document.body.focus();
       // router.push("/");
@@ -1120,7 +1120,15 @@ export default function OrderCard() {
           </Button>
         </div>
       </div>
-      <Drawer open={phoneDrawerOpen} onOpenChange={setPhoneDrawerOpen}>
+      <Drawer
+        open={phoneDrawerOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPhoneDrawerOpen(false);
+            setIsFinalLoading(false);
+          }
+        }}
+      >
         <DrawerContent className="rounded-t-3xl">
           <DrawerDescription></DrawerDescription>
 
@@ -1134,9 +1142,19 @@ export default function OrderCard() {
                   <span className="text-xs text-muted-foreground tracking-wide">
                     Sent via SMS to {user?.phone}
                   </span>
-                  {/* <span className="text-xs text-[#FF8080] tracking-wide ">
-                    Change number?
-                  </span> */}
+                  {user?.tag === "restaurant" && (
+                    <span
+                      className="text-xs text-[#FF8080] tracking-wide "
+                      onClick={() => {
+                        setStage("phone");
+                        setPhoneNumber("");
+                        setCount(0);
+                        setOtp("");
+                      }}
+                    >
+                      Change number?
+                    </span>
+                  )}
                 </div>
               )}
             </DrawerTitle>

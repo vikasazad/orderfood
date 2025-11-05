@@ -2,13 +2,11 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import React from "react";
 import { clearCart } from "@/lib/features/addToOrderSlice";
-
+import { useRouter } from "next/navigation";
 export default function OrderConfirmation() {
   const router = useRouter();
   const finalItem = useSelector(
@@ -18,22 +16,18 @@ export default function OrderConfirmation() {
   const { user } = useSelector((state: RootState) => state.addToOrderData);
   const dispatch = useDispatch();
   // Add useEffect to handle auto-close
-  React.useEffect(() => {
-    // if (finalItem && user?.tag === "hotel") {
-    dispatch(clearCart());
-    const timer = setTimeout(() => {
-      router.push("/");
-      dispatch(clearCart());
-      toast.success("Order Placed Successfully!");
-    }, 5000);
 
-    return () => clearTimeout(timer);
-    // }
-    // else {
-    //   router.push("/");
-    //   dispatch(clearCart());
-    //   toast.success("Order Placed Successfully!");
-    // }
+  React.useEffect(() => {
+    if (finalItem && user?.tag === "hotel") {
+      dispatch(clearCart());
+      const timer = setTimeout(() => {
+        window.open(user?.home, "_self");
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      dispatch(clearCart());
+      router.push("/");
+    }
   }, [finalItem, user]);
 
   // const copyToClipboard = (text: string, label: string) => {
