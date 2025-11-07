@@ -34,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -262,7 +261,7 @@ export default function Header({ data }: { data: any }) {
 
             <SheetContent
               side="left"
-              className="w-[350px] sm:w-[350px] flex flex-col overflow-y-auto "
+              className="w-[350px] sm:w-[350px] flex flex-col overflow-y-auto px-2 py-6"
             >
               <SheetHeader className=" space-y-0 ">
                 <SheetTitle className="text-xl">
@@ -281,53 +280,56 @@ export default function Header({ data }: { data: any }) {
 
               {orderData.length > 0 ? (
                 <>
-                  <div className="text-lg">Order Summary:</div>
+                  <div className="text-lg font-bold">Order Summary:</div>
                   {orderData?.map((order: any, i: any) => {
                     console.log(order);
                     return order.diningDetails.orders.map(
                       (item: any, itemIndex: number) => {
                         return (
-                          <div key={`${i}-${itemIndex}`}>
-                            <Separator />
+                          <div
+                            key={`${i}-${itemIndex}`}
+                            className=" p-3 rounded-lg [box-shadow:var(--shadow-s)] border border-[#ff8080]"
+                          >
+                            {/* <Separator /> */}
                             <div className="grid gap-2">
                               <div className="space-y-2">
                                 <div className="flex justify-between text-sm mt-2">
-                                  <span className="text-muted-foreground">
+                                  <span className="text-muted-foreground font-semibold">
                                     Order Number:
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-bold  ">
                                     {item.orderId}
                                   </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">
+                                  <span className="text-muted-foreground font-semibold">
                                     Payment ID:
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-bold  ">
                                     {item.payment.paymentId}
                                   </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">
+                                  <span className="text-muted-foreground font-semibold  ">
                                     Estimated Delivery:
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-bold  ">
                                     20-25 minutes
                                   </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">
+                                  <span className="text-muted-foreground font-semibold  ">
                                     Table:
                                   </span>
-                                  <span className="font-medium text-right">
+                                  <span className="font-bold text-right">
                                     {`T-${orderData[0].diningDetails.location}`}
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                  <h3 className="font-semibold">Order Items</h3>
+                              <div className=" bg-[#f0f0f0] py-1 px-2 rounded-lg [box-shadow:var(--shadow-m)]">
+                                <div className="flex justify-between items-center py-1">
+                                  <h3 className="font-medium">Order Items</h3>
                                   {/* <Button
                                     variant="destructive"
                                     size="sm"
@@ -343,16 +345,17 @@ export default function Header({ data }: { data: any }) {
                                     Cancel Selected
                                   </Button> */}
                                 </div>
-
-                                <div className="divide-y">
-                                  {item.items.map((itm: any, index: number) => {
-                                    console.log("itm", itm);
-                                    return (
-                                      <div
-                                        key={index}
-                                        className=" flex items-center gap-4"
-                                      >
-                                        {/* <Checkbox
+                                <div className="space-y-1">
+                                  <div className="space-y-2 ">
+                                    {item.items.map(
+                                      (itm: any, index: number) => {
+                                        console.log("itm", itm);
+                                        return (
+                                          <div
+                                            key={index}
+                                            className=" flex items-center gap-4"
+                                          >
+                                            {/* <Checkbox
                                         checked={orderSelectedItems[
                                           item.orderId
                                         ]?.includes(`${itm.id}`)}
@@ -360,79 +363,85 @@ export default function Header({ data }: { data: any }) {
                                           handleItemSelect(item.orderId, itm.id)
                                         }
                                       /> */}
-                                        <div className="flex-1">
-                                          <div className="font-medium">
-                                            {itm.name}
+                                            <div className="flex-1">
+                                              <div className="font-bold">
+                                                {itm.name}
+                                              </div>
+                                              <div className="text-xs text-muted-foreground font-semibold">
+                                                - {itm.quantity}
+                                              </div>
+                                            </div>
+                                            <div className="font-bold flex items-center ">
+                                              <IndianRupee className="h-3 w-3" />
+                                              {Number(itm.price)}
+                                            </div>
                                           </div>
-                                          <div className="text-sm text-muted-foreground">
-                                            Quantity: {itm.quantity}
-                                          </div>
-                                        </div>
-                                        <div className="font-medium flex items-center ">
-                                          <IndianRupee className="h-3 w-3" />
-                                          {Number(itm.price)}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                                        );
+                                      }
+                                    )}
+                                  </div>
+
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs font-semibold text-muted-foreground">
+                                      Savings using{" "}
+                                      <span className="text-purple-300 tracking-wider">
+                                        {item.payment.discount?.code}
+                                      </span>
+                                    </span>
+                                    <div className=" font-bold flex items-center  text-green-500">
+                                      -
+                                      <IndianRupee
+                                        className="h-3 w-3"
+                                        strokeWidth={3}
+                                      />
+                                      <span className=" ">
+                                        {item.payment.discount?.amount || 0}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs text-muted-foreground font-semibold">
+                                      Subtotal
+                                    </span>
+                                    <span className=" font-bold flex items-center ">
+                                      <IndianRupee className="h-3 w-3" />
+                                      {item.payment.subtotal}
+                                    </span>
+                                  </div>
+                                  {item.payment.gst.gstAmount ? (
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs text-muted-foreground font-semibold">
+                                        {`Tax (${item.payment.gst.gstPercentage}%)`}
+                                      </span>
+                                      <span className=" font-bold flex items-center ">
+                                        <IndianRupee className="h-3 w-3" />
+                                        {item.payment.gst.gstAmount}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    ""
+                                  )}
                                 </div>
                               </div>
 
-                              <div className="flex justify-between items-center pt-2 border-t">
-                                <span className="text-xs font-semibold text-muted-foreground">
-                                  Savings using{" "}
-                                  <span className="text-purple-300 tracking-wider">
-                                    {item.payment.discount?.code}
-                                  </span>
-                                </span>
-                                <div className="text-sm font-semibold flex items-center  text-green-500">
-                                  -
-                                  <IndianRupee
-                                    className="h-3 w-3"
-                                    strokeWidth={3}
-                                  />
-                                  <span className="text-sm ">
-                                    {item.payment.discount?.amount || 0}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between items-center pt-4 border-t">
-                                <span className="text-lg font-semibold">
-                                  Subtotal
-                                </span>
-                                <span className="text-lg font-semibold flex items-center ">
-                                  <IndianRupee className="h-3 w-3" />
-                                  {item.payment.subtotal}
-                                </span>
-                              </div>
-                              {item.payment.gst.gstAmount ? (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm text-muted-foreground">
-                                    {`Tax (${item.payment.gst.gstPercentage}%)`}
-                                  </span>
-                                  <span className="text-sm font-medium flex items-center ">
-                                    <IndianRupee className="h-3 w-3" />
-                                    {item.payment.gst.gstAmount}
-                                  </span>
-                                </div>
-                              ) : (
-                                ""
-                              )}
-
-                              <div className="flex justify-between items-center pt-4 border-t">
+                              <div className="flex justify-between items-center ">
                                 <div className="flex items-center">
                                   <span className="text-lg font-semibold mr-2">
                                     Total
                                   </span>
                                   {item.payment.paymentStatus === "paid" ? (
-                                    <Badge>Paid</Badge>
+                                    <Badge className="bg-[#ff8080] text-white [box-shadow:var(--shadow-s)] border-none">
+                                      Paid
+                                    </Badge>
                                   ) : (
-                                    <Badge>Pending</Badge>
+                                    <Badge className="bg-[#ff8080] text-white [box-shadow:var(--shadow-s)] border-none">
+                                      Pending
+                                    </Badge>
                                   )}
                                 </div>
 
-                                <span className="text-lg font-semibold flex items-center ">
+                                <span className="text-lg font-bold flex items-center ">
                                   <IndianRupee className="h-3 w-3" />
                                   {item.payment.price}
                                 </span>

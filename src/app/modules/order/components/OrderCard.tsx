@@ -74,6 +74,7 @@ const useCountdown = (initialCount: number) => {
   const [count, setCount] = useState(0);
 
   const startCountdown = () => setCount(initialCount);
+  const stopCountdown = () => setCount(0);
 
   useEffect(() => {
     if (count > 0) {
@@ -82,7 +83,7 @@ const useCountdown = (initialCount: number) => {
     }
   }, [count]);
 
-  return [count, startCountdown, setCount] as const;
+  return [count, startCountdown, stopCountdown] as const;
 };
 
 export default function OrderCard() {
@@ -122,7 +123,7 @@ export default function OrderCard() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
-  const [count, startCountdown, setCount] = useCountdown(30);
+  const [count, startCountdown, stopCountdown] = useCountdown(30);
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
 
   const handleCouponApply = async () => {
@@ -538,6 +539,7 @@ export default function OrderCard() {
       // const newUser = { ...user, phone: fNumber };
       // dispatch(setUser(newUser));
 
+      stopCountdown();
       setStage("phone");
       setOtp("");
       setPhoneNumber("");
@@ -589,7 +591,7 @@ export default function OrderCard() {
           <ChevronLeft className="h-6 w-6 " strokeWidth={3} />
         </div>
       </div>
-      <div className="w-full max-w-md mx-auto p-4">
+      <div className="w-full max-w-md mx-auto p-4 space-y-4">
         {isPending && (
           <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="flex flex-col items-center gap-2">
@@ -615,7 +617,7 @@ export default function OrderCard() {
               <HandPlatter className="h-6 w-6" />
             </div>
           </CardHeader>
-          <CardContent className="px-3 py-3 space-y-6">
+          <CardContent className="p-3 space-y-6">
             {ordereditems.map((item: any, id: any) => (
               <div key={id} className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
@@ -663,7 +665,7 @@ export default function OrderCard() {
                         removeAfterZero(item, id);
                       }}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="h-4 w-4 " />
                     </Button>
                     <span className="w-8 text-center">{item.count}</span>
                     <Drawer>
@@ -679,51 +681,77 @@ export default function OrderCard() {
                       </DrawerTrigger>
                       {activeItem &&
                         typeof activeItem.item.price === "object" && (
-                          <DrawerContent className="h-[250px]">
+                          <DrawerContent className=" rounded-t-2xl">
                             <DrawerHeader>
                               <DrawerTitle>{activeItem.item.name}</DrawerTitle>
                             </DrawerHeader>
                             <DrawerDescription></DrawerDescription>
-                            <div className="py-6 px-4">
+                            <div className="  px-4 ">
                               <RadioGroup
                                 value={selectedPortion}
                                 onValueChange={setSelectedPortion}
+                                className="w-full flex items-center justify-between gap-3"
                               >
                                 {Object.entries(activeItem.item.price).map(
                                   ([size, price]: any) => (
                                     <div
                                       key={size}
-                                      className="flex items-center justify-between py-2"
+                                      className={`w-full p-4 rounded-lg [box-shadow:var(--shadow-inset)] ${
+                                        selectedPortion === size
+                                          ? "[box-shadow:var(--shadow-m)] bg-[#ff8080]"
+                                          : ""
+                                      }`}
                                     >
-                                      <Label htmlFor={size}>{size}</Label>
-                                      <div className="flex items-center space-x-4">
-                                        <span className="text-green-500">
-                                          + {price}
-                                        </span>
+                                      <div className="flex items-center justify-between">
+                                        <Label
+                                          htmlFor={size}
+                                          className="text-sm  text-muted-foreground font-semibold"
+                                        >
+                                          {size}
+                                        </Label>
                                         <RadioGroupItem
                                           value={size}
                                           id={size}
+                                          className="w-5 h-5"
                                         />
+                                      </div>
+                                      <div className=" pt-3 ">
+                                        <span
+                                          className={` flex items-center gap-1 ${
+                                            selectedPortion === size
+                                              ? "text-white"
+                                              : "text-green-500"
+                                          } text-lg font-bold leading-none`}
+                                        >
+                                          <IndianRupee
+                                            className="h-3 w-3"
+                                            strokeWidth={3}
+                                          />
+                                          {price}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground font-light leading-none">
+                                          per serving
+                                        </span>
                                       </div>
                                     </div>
                                   )
                                 )}
                               </RadioGroup>
-                              <div className="flex gap-4 mt-6">
-                                <Button
-                                  variant="outline"
-                                  className="w-full"
-                                  onClick={() => setActiveItem(null)}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  className="w-full"
-                                  onClick={() => addItemWithPortion(activeItem)}
-                                >
-                                  Add
-                                </Button>
-                              </div>
+                            </div>
+                            <div className="flex gap-3 px-4 py-3">
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setActiveItem(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="w-full bg-[#FF8080] text-white [box-shadow:var(--shadow-m)] hover:bg-[#FF8080]/80"
+                                onClick={() => addItemWithPortion(activeItem)}
+                              >
+                                Add
+                              </Button>
                             </div>
                           </DrawerContent>
                         )}
@@ -858,10 +886,10 @@ export default function OrderCard() {
           </CardContent>
         </Card>
 
-        <Card className="mt-4 rounded-3xl mb-[100px] [box-shadow:var(--shadow-s)]">
+        <Card className=" rounded-3xl mb-[100px] [box-shadow:var(--shadow-s)]">
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold">Payment Details</h1>
+              <h1 className="text-md font-medium">Payment Details</h1>
 
               <ChevronRight
                 className="self-right h-4 w-4 cursor-pointer"
@@ -870,7 +898,7 @@ export default function OrderCard() {
               />
             </div>
           </CardHeader>
-          <CardContent className="pt-2 pb-4 px-4">
+          <CardContent className="pt-2 pb-4 px-3">
             <div className="space-y-4">
               <div className="flex items-center justify-between w-full">
                 <p className="text-xs font-semibold text-muted-foreground">
@@ -886,8 +914,8 @@ export default function OrderCard() {
                   Total savings with discount
                   <CircleHelp className="h-4 w-4 cursor-pointer text-[#FF8080]" />
                 </p>
-                <p className="text-xs text-green-500 font-bold flex items-center gap-1">
-                  -<IndianRupee className="h-3 w-3" strokeWidth={3} />
+                <p className="text-xs text-green-500 font-bold flex items-center ">
+                  -<IndianRupee className="h-3 w-3" />
                   {discount || 0}
                 </p>
               </div>
@@ -895,8 +923,8 @@ export default function OrderCard() {
                 <div className="flex items-center justify-between w-full px-2 py-1 rounded-xl bg-pink-200/50 gap-2 [box-shadow:var(--shadow-s)]">
                   <div className="text-xs flex-1 flex flex-wrap items-center gap-1">
                     You saved
-                    <span className="text-green-500 text-md font-semibold flex items-center gap-1">
-                      <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                    <span className="text-green-500 text-md font-semibold flex items-center ">
+                      <IndianRupee className="h-3 w-3" />
                       {discount}
                     </span>
                     with
@@ -974,13 +1002,13 @@ export default function OrderCard() {
                     </DrawerTitle>
                   </DrawerHeader>
 
-                  <div className="m-3 px-4 pb-4 py-3 space-y-4 bg-white rounded-2xl [box-shadow:var(--shadow-s)]">
+                  <div className="m-3 my-1 px-4 pb-4 py-3 space-y-4 bg-white rounded-2xl [box-shadow:var(--shadow-s)]">
                     <div className="flex justify-between items-center">
                       <span className="text-xs  text-muted-foreground">
                         Item amount({ordereditems.length})
                       </span>
-                      <span className="text-xs font-bold flex items-center gap-1">
-                        <IndianRupee className="h-3 w-3" strokeWidth={3} />{" "}
+                      <span className="text-xs font-bold flex items-center ">
+                        <IndianRupee className="h-3 w-3" />
                         {calculateTotal(ordereditems)}
                       </span>
                     </div>
@@ -990,8 +1018,8 @@ export default function OrderCard() {
                         <span className="text-xs text-green-600">
                           Savings with {coupon.code}
                         </span>
-                        <span className="text-xs text-green-600 font-bold flex items-center gap-1">
-                          - <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                        <span className="text-xs text-green-600 font-bold flex items-center">
+                          - <IndianRupee className="h-3 w-3" />
                           {discount}
                         </span>
                       </div>
@@ -1015,14 +1043,14 @@ export default function OrderCard() {
                       <span className="text-xs text-muted-foreground">
                         Sub Total
                       </span>
-                      <span className="text-xs font-bold flex items-center gap-1">
-                        <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                      <span className="text-xs font-bold flex items-center">
+                        <IndianRupee className="h-3 w-3" />
                         {calculateTotal(ordereditems) - (discount || 0)}
                       </span>
                     </div>
                     <Popover>
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center">
                           <span className="text-xs text-muted-foreground">
                             Taxes and charges
                           </span>
@@ -1030,8 +1058,8 @@ export default function OrderCard() {
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </PopoverTrigger>
                         </div>
-                        <span className="text-xs font-bold flex items-center gap-1">
-                          <IndianRupee className="h-3 w-3" strokeWidth={3} />
+                        <span className="text-xs font-bold flex items-center">
+                          <IndianRupee className="h-3 w-3" />
                           {user?.tax
                             ? calculateTax(
                                 calculateTotal(ordereditems) - (discount || 0),
@@ -1051,11 +1079,8 @@ export default function OrderCard() {
                         <div className="px-6 py-4 space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs">Taxes</span>
-                            <span className="text-xs flex items-center gap-1">
-                              <IndianRupee
-                                className="h-3 w-3"
-                                strokeWidth={3}
-                              />
+                            <span className="text-xs flex items-center ">
+                              <IndianRupee className="h-3 w-3" />
                               {user?.tax
                                 ? calculateTax(
                                     calculateTotal(ordereditems) -
@@ -1078,7 +1103,7 @@ export default function OrderCard() {
 
                     <div className="flex justify-between items-center font-semibold text-xs">
                       <span>To Pay</span>
-                      <span className="flex items-center gap-1">
+                      <span className="font-bold flex items-center gap-1 text-sm">
                         <IndianRupee className="h-3 w-3" strokeWidth={3} />
                         {finalPrice}
                       </span>
@@ -1140,7 +1165,7 @@ export default function OrderCard() {
                 <div className="flex flex-col gap-1 ">
                   <span className="text-md font-bold">Verify with OTP</span>
                   <span className="text-xs text-muted-foreground tracking-wide">
-                    Sent via SMS to {user?.phone}
+                    Sent via SMS to {user?.phone || phoneNumber}
                   </span>
                   {user?.tag === "restaurant" && (
                     <span
@@ -1148,7 +1173,7 @@ export default function OrderCard() {
                       onClick={() => {
                         setStage("phone");
                         setPhoneNumber("");
-                        setCount(0);
+                        stopCountdown();
                         setOtp("");
                       }}
                     >
@@ -1165,8 +1190,20 @@ export default function OrderCard() {
               <Input
                 placeholder="Enter your phone number"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="rounded-xl "
+                onChange={(e) => {
+                  if (/^\d{0,10}$/.test(e.target.value)) {
+                    setPhoneNumber(e.target.value);
+                  }
+                }}
+                className="rounded-lg "
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
+                inputMode="numeric"
+                type="tel"
+                required
+                aria-invalid={false}
+                aria-describedby="phone-error"
                 autoFocus
               />
             )}
@@ -1220,7 +1257,11 @@ export default function OrderCard() {
               onClick={() =>
                 stage === "phone" ? handlePhoneSubmit() : handleOtpSubmit()
               }
-              disabled={isLoading}
+              disabled={
+                isLoading ||
+                phoneNumber.length !== 10 ||
+                (stage === "otp" && otp.length !== 6)
+              }
             >
               {stage === "phone" ? "Continue" : "Verify"}
               {isLoading && (

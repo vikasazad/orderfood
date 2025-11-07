@@ -6,7 +6,6 @@ import store, { AppStore } from "../lib/store";
 import { DM_Sans } from "next/font/google";
 import { useRef, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import GlobalNotificationProvider from "@/hooks/useFcmToken";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -53,10 +52,8 @@ export default function RootLayout({
               }
               persistor={storeRef.current.persistor}
             >
-              <GlobalNotificationProvider>
-                <Toaster />
-                {children}
-              </GlobalNotificationProvider>
+              <Toaster />
+              {children}
             </PersistGate>
           </Provider>
         </main>
