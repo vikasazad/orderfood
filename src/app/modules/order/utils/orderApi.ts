@@ -791,10 +791,10 @@ export async function sendStaffAssignmentRequest(
 
       console.log("initial pendingAssignments stored in database");
 
-      // Set timeout using configurable duration
-      setTimeout(() => {
-        handleAssignmentTimeout(orderId);
-      }, 5 * 60 * 1000);
+      // // Set timeout using configurable duration
+      // setTimeout(() => {
+      //   handleAssignmentTimeout(orderId);
+      // }, 5 * 60 * 1000);
 
       return { success: true, messageId };
     }
@@ -811,36 +811,29 @@ export async function sendStaffAssignmentRequest(
 
 async function storePendingAssignment(assignment: AssignmentRequest) {
   try {
-    // Store assignment as a field within the webhook document
     const businessEmail = assignment.businessEmail || "vikumar.azad@gmail.com";
-    const docRef = doc(db, businessEmail, "webhook");
+    const assignmentRef = doc(
+      db,
+      businessEmail,
+      "webhook",
+      "assignments",
+      assignment.orderId
+    );
 
-    // Get existing webhook document
-    const docSnap = await getDoc(docRef);
-    let existingAssignments = {};
-
-    if (docSnap.exists()) {
-      existingAssignments = docSnap.data() || {};
-    }
-
-    // Add the new assignment
-    const updatedAssignments = {
-      ...existingAssignments,
-      [assignment.orderId]: {
-        ...assignment,
-        status: assignment.status || "pending",
-        timestamp: Date.now(),
-      },
+    const assignmentData = {
+      ...assignment,
+      status: assignment.status || "pending",
+      timestamp: Date.now(),
     };
 
-    await setDoc(docRef, updatedAssignments);
+    await setDoc(assignmentRef, assignmentData);
     console.log("Pending assignment stored:", assignment.orderId);
   } catch (error) {
     console.error("Error storing pending assignment:", error);
   }
 }
 
-async function handleAssignmentTimeout(orderId: string) {
+export async function handleAssignmentTimeout(orderId: string) {
   try {
     //In this we are only sending notification to the receptionist not the manager
     const assignment = await getPendingAssignment(orderId);

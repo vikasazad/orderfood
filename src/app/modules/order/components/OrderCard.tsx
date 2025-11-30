@@ -230,9 +230,15 @@ export default function OrderCard() {
     setSpecialRequirements("");
     setIsSpecialRequestsOpen(false);
   };
-  function generateOrderId(restaurantCode: string, tableNo: string) {
+  function generateOrderId(
+    restaurantCode: string,
+    tableNo: string,
+    tag: string
+  ) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `${restaurantCode}:T-${tableNo}:${randomNumber}`;
+    const orderId = `${restaurantCode}:${
+      tag === "hotel" ? "R" : "T"
+    }-${tableNo}:${randomNumber}`;
     return orderId;
   }
   const createOrderData = (data: any) => {
@@ -249,19 +255,19 @@ export default function OrderCard() {
 
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    setIsFinalLoading(true);
-    if (user?.phone && stage === "phone") {
-      const res = await handlePhoneSubmit(user?.phone);
-      if (res) {
-        setPhoneDrawerOpen(true);
-      }
-    } else {
-      setPhoneDrawerOpen(true);
-    }
+    // setIsFinalLoading(true);
+    // if (user?.phone && stage === "phone") {
+    //   const res = await handlePhoneSubmit(user?.phone);
+    //   if (res) {
+    //     setPhoneDrawerOpen(true);
+    //   }
+    // } else {
+    //   setPhoneDrawerOpen(true);
+    // }
     // setPhoneDrawerOpen(true);
     // setStage("otp");
-    // setLoadScript(true);
-    // createOrder();
+    setLoadScript(true);
+    createOrder();
     // router.push("/Detail");
   };
   const createOrder = async () => {
@@ -303,7 +309,11 @@ export default function OrderCard() {
 
         if (data.isOk) {
           startTransition(async () => {
-            const orderId = generateOrderId("RES", user?.tableNo);
+            const orderId = generateOrderId(
+              "RES",
+              user?.tableNo,
+              user?.tag || ""
+            );
             const gst = calculateTax(
               calculateTotal(ordereditems) - (discount || 0),
               calculateTotal(ordereditems) - (discount || 0),
@@ -403,52 +413,56 @@ export default function OrderCard() {
             router.push("/orderConfirmation");
           });
         } else {
-          const orderId = generateOrderId("ROS", user?.tableNo);
-          console.log("New Order ID:", orderId);
-          console.log("first", ordereditems);
-          const gst = calculateTax(
-            calculateTotal(ordereditems) - (discount || 0),
-            calculateTotal(ordereditems) - (discount || 0),
-            user?.tag === "hotel" ? "dining" : "restaurant",
-            user?.tax
-          );
-          const orderData: any = {
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            orderId: orderId,
-            orderSuccess: false,
-            orderedItem: [],
-            orderAmount: finalPrice,
-            subtotal: calculateTotal(ordereditems) - (discount || 0),
-            gstPercentage: gst.gstPercentage || "",
-            gstAmount: gst.gstAmount,
-            cgstAmount: gst.cgstAmount,
-            cgstPercentage: gst.cgstPercentage,
-            sgstAmount: gst.sgstAmount,
-            sgstPercentage: gst.sgstPercentage,
-            contactNo: "",
-            name: "",
-            email: "",
-            problemFood: "",
-            problemService: "",
-            timeOfOrder: new Date().toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            timeOfService: "",
-            tableNo: "T-8",
-            estimatedDeliveryTime: "",
-            deliveryAddress: "",
-            specialrequirements: specialRequirements,
-          };
-          ordereditems.map((er: any) => {
-            return orderData.orderedItem.push(createOrderData(er));
-          });
-          dispatch(setFinalOrder(orderData));
-          console.log(orderData);
-          setIsFinalLoading(false);
-          router.push("/orderConfirmation");
+          // const orderId = generateOrderId(
+          //   "RES",
+          //   user?.tableNo,
+          //   user?.tag || ""
+          // );
+          // console.log("New Order ID:", orderId);
+          // console.log("first", ordereditems);
+          // const gst = calculateTax(
+          //   calculateTotal(ordereditems) - (discount || 0),
+          //   calculateTotal(ordereditems) - (discount || 0),
+          //   user?.tag === "hotel" ? "dining" : "restaurant",
+          //   user?.tax
+          // );
+          // const orderData: any = {
+          //   razorpayOrderId: response.razorpay_order_id,
+          //   razorpayPaymentId: response.razorpay_payment_id,
+          //   orderId: orderId,
+          //   orderSuccess: false,
+          //   orderedItem: [],
+          //   orderAmount: finalPrice,
+          //   subtotal: calculateTotal(ordereditems) - (discount || 0),
+          //   gstPercentage: gst.gstPercentage || "",
+          //   gstAmount: gst.gstAmount,
+          //   cgstAmount: gst.cgstAmount,
+          //   cgstPercentage: gst.cgstPercentage,
+          //   sgstAmount: gst.sgstAmount,
+          //   sgstPercentage: gst.sgstPercentage,
+          //   contactNo: "",
+          //   name: "",
+          //   email: "",
+          //   problemFood: "",
+          //   problemService: "",
+          //   timeOfOrder: new Date().toLocaleTimeString("en-US", {
+          //     hour: "2-digit",
+          //     minute: "2-digit",
+          //     hour12: true,
+          //   }),
+          //   timeOfService: "",
+          //   tableNo: "T-8",
+          //   estimatedDeliveryTime: "",
+          //   deliveryAddress: "",
+          //   specialrequirements: specialRequirements,
+          // };
+          // ordereditems.map((er: any) => {
+          //   return orderData.orderedItem.push(createOrderData(er));
+          // });
+          // dispatch(setFinalOrder(orderData));
+          // console.log(orderData);
+          // setIsFinalLoading(false);
+          // router.push("/orderConfirmation");
           alert("Payment failed");
         }
       },
