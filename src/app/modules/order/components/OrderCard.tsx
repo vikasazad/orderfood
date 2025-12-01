@@ -255,19 +255,19 @@ export default function OrderCard() {
 
   const handlePlaceOrder = async () => {
     console.log("clicked");
-    // setIsFinalLoading(true);
-    // if (user?.phone && stage === "phone") {
-    //   const res = await handlePhoneSubmit(user?.phone);
-    //   if (res) {
-    //     setPhoneDrawerOpen(true);
-    //   }
-    // } else {
-    //   setPhoneDrawerOpen(true);
-    // }
+    setIsFinalLoading(true);
+    if (user?.phone && stage === "phone") {
+      const res = await handlePhoneSubmit(user?.phone);
+      if (res) {
+        setPhoneDrawerOpen(true);
+      }
+    } else {
+      setPhoneDrawerOpen(true);
+    }
     // setPhoneDrawerOpen(true);
     // setStage("otp");
-    setLoadScript(true);
-    createOrder();
+    // setLoadScript(true);
+    // createOrder();
     // router.push("/Detail");
   };
   const createOrder = async () => {

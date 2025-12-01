@@ -3,6 +3,7 @@ import { sendNotification } from "@/lib/sendNotification";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 interface AssignmentRequest {
+  info: string;
   staffName: string;
   orderId: string;
   staffContact: string;
@@ -781,6 +782,7 @@ export async function sendStaffAssignmentRequest(
         orderId,
         staffContact,
         messageId,
+        info: "Food Order Request",
         timestamp: Date.now(),
         attemptCount: 1,
         customerName,
